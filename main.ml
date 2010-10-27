@@ -18,11 +18,44 @@ type term =
 | Lambda of string * term
 | App of term * term
 
-let envlist = ref [];;
+(*let envlist = ref [];;
 let envnum = ref 0;;
+let maxenvnum = ref 0;;*)
 let treelist = ref [];;
 
-let rec build_tree head tail =
+let rec build_tree env tree = 
+		begin
+			print_endline ("build_tree[sizeEnv]: "^string_of_int(List.length env));
+			let element = List.hd env in
+			print_endline (snd(element));
+			let isLambda = fst(element) in
+			match isLambda with
+				| true ->
+					print_endline "true"; 
+					if (List.tl env) == [] then
+						begin
+							let firsttree = List.hd !treelist in
+							treelist := List.tl !treelist;
+							Lambda(snd(element), firsttree)
+						end
+					else
+						Lambda(snd(element), build_tree (List.tl env) tree);
+				| false -> 
+					print_endline "false"; 
+					print_endline ("TEST"^(string_of_int(List.length env)));
+					if ((List.tl env) == []) then
+						Var(snd(element))
+					else
+						begin
+							(*let firsttree = List.hd !treelist in*)
+							(*treelist := List.tl !treelist;*)
+						App((build_tree (List.tl env) tree),Var(snd(element)))
+						(*App(firsttree,Var(snd(element)))*)
+						end
+		end
+
+
+(*let rec build_tree head tail =
 	if (tail = []) then
 		Var(snd(head))
 	else
@@ -44,7 +77,7 @@ let rec build_tree head tail =
 					else
 						App(Var(snd(head)),build_tree (nexthead) (nexttl))
 		end	
-;;
+;;*)
 
 let rec merge_tree tree1 tree2 =
 		match tree1 with
@@ -82,74 +115,150 @@ let rec show_tree tree =
 			print_string ")"
 			;;
 
-let rec parse_string s index length isLambda isEnv env = 
-	if (index < length) then
-	begin
-		match s.[index] with
-			| '(' ->
-				if (env <> []) then
-					envlist := List.append (!envlist) ((!envnum,env)::[]);
-				(*print_char s.[index];*)
-				(*print_char '\n';*)
-				envnum := !envnum + 1;
-				parse_string s (index+1) length isLambda isEnv [];
-			| ')' ->
-				print_endline ("Fermeture: "^string_of_int (List.length env));
-				(*print_char s.[index];*)
-				(*print_char '\n';*)
-				let tree = build_tree (List.hd env) (List.tl env) in
-				treelist := ((!envnum, tree)::!treelist);
-				if (List.length !treelist) == 2 then
-				begin
-					print_endline "Construction arbre";
-					let tree1 = List.hd !treelist in
-					let tree2 = List.hd (List.tl !treelist) in
-					let samelevel = (fst(tree1) == fst(tree2)) in
-					let level = fst(tree1) in
-					if samelevel then
-					begin
-						treelist := (level, App(snd(tree2), snd(tree1)))::[];
-						print_endline "niveau <>"
-					end
-					else
-					begin
-						let newtree = merge_tree (snd(tree1)) (snd(tree1)) in
-						treelist := (level,newtree)::[];
-					end
-				end;
-				envnum := !envnum - 1;
-				parse_string s (index+1) length isLambda isEnv env;
-			| '.' -> 
-				(*print_char s.[index];*)
-				(*print_char '\n';*)
-				parse_string s (index+1) length false true env;
-			| 'l' -> 
-				(*envlist := 1::!envlist;*)
-				(*print_char s.[index];*)
-				(*print_char '\n';*)
-				parse_string s (index+1) length true isEnv env;
-			| c -> 		
-				if (c >= 'a' && c <='z' && c <> 'l') then
-					begin
-						(*print_char s.[index];*)
-						(*print_char '\n';*)
-						let newstring = String.make 1 s.[index] in
-						let env = List.append env ((isLambda,newstring)::[]) in
-							parse_string s (index+1) length isLambda isEnv env
-					end
-				else
-					()
-	end	
+(** Cherche la parenthèse fermante suivante dans la chaine **)
+let rec search_par first second string level current length =
+	if (current = length) then
+		-1
 	else
 		begin
-			print_endline "FIN";
-			print_endline (string_of_int (List.length !envlist));
-			print_endline (string_of_int (List.length !treelist));
-			print_endline "**ARBRE**";
-			show_tree (snd(List.hd !treelist));
-		()
-		end;;
+			if (string.[current] = first) then
+				begin
+					if (level = 0) then
+						current
+					else
+						search_par first second string (level-1) (current+1) length;
+				end
+			else if (string.[current] = second) then
+				search_par first second string (level+1) (current+1) length
+			else
+				search_par first second string level (current+1) length
+				end
+;;
 
-let parse s length = parse_string s 0 length false false [];;
+
+		
+(*let rec parse_string s index length isLambda level env = 
+							match s.[index] with
+								| '(' ->
+									let newstring = String.sub s 1 (length-1) in
+									let nextpar = (search_par newstring 0 0 (String.length s))+1 in
+									if (nextpar < length-1) then
+										begin
+											let lengthTree2 = (nextpar+1) - (length - (nextpar+1))-1 in
+											let tree1 = parse_string s (index+1) nextpar isLambda (level+1) env in
+											let tree2 = parse_string s (nextpar+1) lengthTree2 isLambda (level+1) env in
+											App(tree1, tree2);
+										end
+									else
+										parse_string s (index+1) length isLambda (level+1) env;
+								(*| ')' ->
+									()*)
+								| '.' -> 
+									parse_string s (index+1) length false level env;
+								| 'l' -> 
+									let var = String.make 1 s.[index+1] in
+									Lambda(var, (parse_string s (index+2) length true level env));
+								| c ->
+									let var = String.make 1 c in
+									print_endline ("cmoi "^var);
+									print_endline (string_of_bool isLambda);
+									print_endline (string_of_int level);
+									print_endline (string_of_int index);
+									print_endline (string_of_int length);
+									if isLambda then
+										Lambda(var, (parse_string s (index+1) length isLambda level env))
+									else
+										begin
+											if (s.[index+1] == ')') then
+												begin
+													if (index == (length-2) || level == 0) then
+														Var(var)
+													else
+														parse_string s (index+2) length isLambda (level-1) env;
+												end
+											else
+												if ((length - index) > 3) then
+													(*begin
+														let var2 = String.make 1 s.[index+1] in
+													App(App(Var(var), Var(var2)), (parse_string s (index+2) length isLambda level env))
+													end
+												else
+													App(Var(var), (parse_string s (index+1) length isLambda level env));
+										end
+;;*)*)
+
+let rec parse_string s index isLambda length env =
+	if (index = (length)) then
+		begin
+			let listLambda = List.find_all (fun x -> fst(x) = true) env in
+			let notLambda = List.rev(List.filter (fun x -> fst(x) = false) env) in
+			let newEnv = List.append listLambda notLambda in
+			print_endline "build";
+			let tree = build_tree newEnv [] in
+			treelist := List.append !treelist (tree::[]);
+			print_endline "end build";
+			show_tree tree;
+			print_endline "end view";
+			print_endline ("treelist[length]: "^(string_of_int (List.length !treelist)));
+			if (List.length !treelist) > 1 then
+				begin
+					let mergedtree = merge_tree (List.hd !treelist) tree in
+					show_tree mergedtree;
+					treelist := mergedtree::[]
+				end
+		end
+	else
+		begin
+			match s.[index] with
+				| '(' ->
+					print_endline "(";
+					let nextparClose = search_par ')' '(' s 0 1 length in
+					let nextparOpen = search_par '(' ')' s 0 1 length in
+					let nextpar = ref 0 in
+					print_endline ("nextparClose: "^(string_of_int(nextparClose)));
+					print_endline ("nextparOpen: "^(string_of_int(nextparOpen)));
+					if (nextparClose <> -1 && (nextparClose < nextparOpen) || (nextparOpen == -1)) then
+						nextpar := nextparClose
+					else
+						nextpar := nextparOpen;
+					let length2 = ref (!nextpar-index-1) in
+					let length1 = (length-(!nextpar+1)) in
+					print_endline ("TEST: "^(string_of_int !length2));
+					if (!length2 == 0) then
+						length2 := length-2;
+					print_endline ("nextpar: "^(string_of_int(!nextpar)));
+					print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int !length2));
+					let newstring2 = String.sub s (index+1) !length2 in
+						(*print_endline (string_of_int !length2);*)
+						print_endline ("newstring2: "^newstring2);
+						parse_string newstring2 0 isLambda !length2 env;
+					if (!nextpar < length-1) then
+					begin
+						let newstring1 = String.sub s (!nextpar+1) length1 in
+						print_endline ("PASSE ICI: "^newstring1);
+						print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int length1));
+						print_endline ("newstring1: "^newstring1);
+						parse_string newstring1 0 isLambda length1 env;
+					end
+				| 'l' ->
+						let lambda = String.make 1 s.[index+1] in
+						print_endline ("l -> "^lambda);
+						let updatedEnv = List.append env ((true,lambda)::[]) in
+						parse_string s (index+2) true length updatedEnv;
+				| '.' ->
+					print_endline ".";
+					parse_string s (index+1) false length env;
+				| c ->
+					let char = String.make 1 c in	
+					print_endline ("c -> "^char);
+					let updatedEnv = List.append env ((isLambda,char)::[]) in
+					parse_string s (index+1) isLambda length updatedEnv;
+		end
+;;
+
+
+let parse s length = 
+	parse_string s 0 false length [];;
 let pre_parse s = parse s (String.length s);; 
+(*let test s = print_int (search_par s (-1) 0 (String.length s));;*)
 let () = pre_parse (read_line());;
