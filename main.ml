@@ -80,20 +80,26 @@ let rec build_tree env tree =
 ;;*)
 
 let rec merge_tree tree1 tree2 =
-		match tree1 with
-			| Lambda(x,t) -> 
+		match (tree1, tree2) with
+			| Lambda(_,_),Lambda(_,_) ->
+				App(tree1, tree2);
+			| _ ->
 				begin
-					match t with
-						| Var(x) -> Lambda(x, App(Var(x), tree2));
-						| _ -> Lambda(x, merge_tree t tree2);
+					match tree1 with
+						| Lambda(x,t) -> 
+							begin
+								match t with
+									| Var(x) -> Lambda(x, App(Var(x), tree2));
+									| _ -> Lambda(x, merge_tree t tree2);
+							end
+						| App(t1,t2) ->
+						begin
+							match t2 with
+								| Var(x) -> App(t1, App(t2,tree2));
+								| _ -> App(t1, merge_tree t2 tree2);
+						end
+					| Var(x) -> App(Var(x),tree2)
 				end
-			| App(t1,t2) ->
-			begin
-				match t2 with
-					| Var(x) -> App(t1, App(t2,tree2));
-					| _ -> App(t1, merge_tree t2 tree2);
-			end
-		| Var(x) -> App(Var(x),tree2)
 
 ;;
 
@@ -202,7 +208,7 @@ let rec parse_string s index isLambda length env =
 			print_endline ("treelist[length]: "^(string_of_int (List.length !treelist)));
 			if (List.length !treelist) > 1 then
 				begin
-					let mergedtree = merge_tree (List.hd !treelist) tree in
+					let mergedtree = merge_tree tree (List.hd !treelist) in
 					show_tree mergedtree;
 					treelist := mergedtree::[]
 				end
@@ -226,20 +232,23 @@ let rec parse_string s index isLambda length env =
 					print_endline ("TEST: "^(string_of_int !length2));
 					if (!length2 == 0) then
 						length2 := length-2;
+						
+						if (!nextpar < length-1) then
+					begin
+						let newstring1 = String.sub s (!nextpar+1) length1 in
+						print_endline ("PASSE ICI: "^newstring1);
+						print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int length1));
+						print_endline ("newstring1: "^newstring1);
+						parse_string newstring1 0 isLambda length1 env
+					end;
 					print_endline ("nextpar: "^(string_of_int(!nextpar)));
 					print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int !length2));
 					let newstring2 = String.sub s (index+1) !length2 in
 						(*print_endline (string_of_int !length2);*)
 						print_endline ("newstring2: "^newstring2);
 						parse_string newstring2 0 isLambda !length2 env;
-					if (!nextpar < length-1) then
-					begin
-						let newstring1 = String.sub s (!nextpar+1) length1 in
-						print_endline ("PASSE ICI: "^newstring1);
-						print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int length1));
-						print_endline ("newstring1: "^newstring1);
-						parse_string newstring1 0 isLambda length1 env;
-					end
+				| ')' ->
+					parse_string s (index+1) isLambda length env;
 				| 'l' ->
 						let lambda = String.make 1 s.[index+1] in
 						print_endline ("l -> "^lambda);
