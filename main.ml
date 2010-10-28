@@ -141,7 +141,12 @@ let rec search_par first second string level current length =
 				end
 ;;
 
-
+let rec search_point string current length =
+	if (string.[current] == '.') then
+		current
+	else
+		search_point string (current+1) length
+;;
 		
 (*let rec parse_string s index length isLambda level env = 
 							match s.[index] with
@@ -220,40 +225,89 @@ let rec parse_string s index isLambda length env =
 		begin
 			match s.[index] with
 				| '(' ->
+					let tempstring = String.sub s index (length-index) in
 					print_endline "(";
 					print_endline ("Actuelle: "^s);
+					print_endline ("Actuelle2: "^tempstring);
 					let nextparClose = search_par ')' '(' s 0 1 length in
 					let nextparOpen = search_par '(' ')' s 0 1 length in
+					let length2 = ref (*(!nextpar-index-1)*)(*(length - (length - (!nextpar +1)))*) 0 in
+					let newstring2 = ref "" in
 					let nextpar = ref 0 in
+					if (s.[index+1] == 'l') then
+					begin
+						print_int (length-(index+1));
+						let string = String.sub s (index+1) (length-(index+1)) in
+						nextpar := search_point s 0 length;
+						length2 := (!nextpar - (index+1));
+						newstring2 := String.sub s (index+1) !length2
+					end
+					else
+					begin
+						print_endline ("nextparClose: "^(string_of_int(nextparClose)));
+						print_endline ("nextparOpen: "^(string_of_int(nextparOpen)));
+						if (nextparClose <> -1 && (nextparClose < nextparOpen) || (nextparOpen == -1)) then
+							nextpar := nextparClose
+						else
+							nextpar := nextparOpen;
+						length2 := length - (length - !nextpar );
+						newstring2 := String.sub s (index+1) !length2;
+						print_endline ("merde: "^(string_of_int !length2))
+					end;
+
 					(*if (s.[index] == 'l') then
 						nextpar = search_point (index+1) length;*)
-					print_endline ("nextparClose: "^(string_of_int(nextparClose)));
-					print_endline ("nextparOpen: "^(string_of_int(nextparOpen)));
-					if (nextparClose <> -1 && (nextparClose < nextparOpen) || (nextparOpen == -1)) then
-						nextpar := nextparClose
-					else
-						nextpar := nextparOpen;
-					let length2 = ref (!nextpar-index-1) in
+					
+					print_endline ("length nextpar index: "^(string_of_int length)^" "^(string_of_int !nextpar)^" "^(string_of_int index));
+					(*let length2 = ref (*(!nextpar-index-1)*)(*(length - (length - (!nextpar +1)))*)(!nextpar - (index+1)) in*)
 					let length1 = (length-(!nextpar)) in
 					print_endline ("TEST: "^(string_of_int !length2));
 					if (!length2 == 0) then
 						length2 := length-2;
 						
-					if (!nextpar < length-1) then
-					begin
-						let newstring1 = String.sub s (!nextpar) length1 in
-						print_endline ("PASSE ICI: "^newstring1);
-						print_endline ("newstring1[length]: "^(string_of_int length1));
-						print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int length1));
-						print_endline ("newstring1: "^newstring1);
-						parse_string newstring1 0 isLambda length1 env
-					end;
 					print_endline ("nextpar: "^(string_of_int(!nextpar)));
 					print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int !length2));
-					let newstring2 = String.sub s (index+1) !length2 in
+					print_endline ("s: "^s);
+					(*let newstring2 = String.sub s (index+1) !length2 in*)
 						(*print_endline (string_of_int !length2);*)
-						print_endline ("newstring2: "^newstring2);
-						parse_string newstring2 0 isLambda !length2 env;
+						print_endline ("newstring2: "^(!newstring2));
+						(*parse_string newstring2 0 isLambda !length2 env;*)
+					
+					begin
+						match s.[index+1] with
+							| 'l' ->
+								print_endline "LAMBDA";
+								
+								print_endline "ok";
+								
+								let newenv = ref env in
+								if (!nextpar < length-1) then
+									begin
+										let newstring1 = String.sub s (!nextpar) length1 in
+										(*print_endline ("newstring1[length]: "^(string_of_int length1));
+										print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int length1));*)
+										print_endline ("JE PARSE: "^newstring1);
+										parse_string newstring1 0 isLambda length1 !newenv;
+										newenv := []
+									end;
+									print_endline ("JE PARSE: "^(!newstring2));
+									parse_string !newstring2 0 isLambda !length2 !newenv;
+							| _ ->
+								print_endline "PASLAMBDA";
+								let newenv = ref env in
+								if (!nextpar < length-1) then
+									begin
+										let newstring1 = String.sub s (!nextpar) length1 in
+										(*print_endline ("newstring1[length]: "^(string_of_int length1));
+										print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int length1));*)
+										(*print_endline ("newstring1: "^newstring1);*)
+										print_endline ("JE PARSE: "^newstring1);
+										parse_string newstring1 0 isLambda length1 !newenv;
+										newenv := []
+									end;
+									print_endline ("JE PARSE: "^(!newstring2));
+								parse_string !newstring2 0 isLambda !length2 !newenv;
+					end
 				| ')' ->
 					parse_string s (index+1) isLambda length env;
 				| 'l' ->
