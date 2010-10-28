@@ -193,6 +193,9 @@ let rec search_par first second string level current length =
 										end
 ;;*)*)
 
+(*let rec search_point string index length =
+	if (string.[index+1] == '.') then
+*)		
 let rec parse_string s index isLambda length env =
 	if (index = (length)) then
 		begin
@@ -218,9 +221,12 @@ let rec parse_string s index isLambda length env =
 			match s.[index] with
 				| '(' ->
 					print_endline "(";
+					print_endline ("Actuelle: "^s);
 					let nextparClose = search_par ')' '(' s 0 1 length in
 					let nextparOpen = search_par '(' ')' s 0 1 length in
 					let nextpar = ref 0 in
+					(*if (s.[index] == 'l') then
+						nextpar = search_point (index+1) length;*)
 					print_endline ("nextparClose: "^(string_of_int(nextparClose)));
 					print_endline ("nextparOpen: "^(string_of_int(nextparOpen)));
 					if (nextparClose <> -1 && (nextparClose < nextparOpen) || (nextparOpen == -1)) then
@@ -228,15 +234,16 @@ let rec parse_string s index isLambda length env =
 					else
 						nextpar := nextparOpen;
 					let length2 = ref (!nextpar-index-1) in
-					let length1 = (length-(!nextpar+1)) in
+					let length1 = (length-(!nextpar)) in
 					print_endline ("TEST: "^(string_of_int !length2));
 					if (!length2 == 0) then
 						length2 := length-2;
 						
-						if (!nextpar < length-1) then
+					if (!nextpar < length-1) then
 					begin
-						let newstring1 = String.sub s (!nextpar+1) length1 in
+						let newstring1 = String.sub s (!nextpar) length1 in
 						print_endline ("PASSE ICI: "^newstring1);
+						print_endline ("newstring1[length]: "^(string_of_int length1));
 						print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int length1));
 						print_endline ("newstring1: "^newstring1);
 						parse_string newstring1 0 isLambda length1 env
