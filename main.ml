@@ -226,21 +226,22 @@ let rec parse_string s index isLambda length env =
 			match s.[index] with
 				| '(' ->
 					let tempstring = String.sub s index (length-index) in
+					let templength = (length-index) in
 					print_endline "(";
 					print_endline ("Actuelle: "^s);
 					print_endline ("Actuelle2: "^tempstring);
-					let nextparClose = search_par ')' '(' s 0 1 length in
-					let nextparOpen = search_par '(' ')' s 0 1 length in
+					let nextparClose = search_par ')' '(' tempstring 0 1 templength in
+					let nextparOpen = search_par '(' ')' tempstring 0 1 templength in
 					let length2 = ref (*(!nextpar-index-1)*)(*(length - (length - (!nextpar +1)))*) 0 in
 					let newstring2 = ref "" in
 					let nextpar = ref 0 in
 					if (s.[index+1] == 'l') then
 					begin
 						print_int (length-(index+1));
-						let string = String.sub s (index+1) (length-(index+1)) in
-						nextpar := search_point s 0 length;
-						length2 := (!nextpar - (index+1));
-						newstring2 := String.sub s (index+1) !length2
+						(*let string = String.sub s (index+1) (length-(index+1)) in*)
+						nextpar := search_point tempstring 0 templength;
+						length2 := (!nextpar - 1);
+						newstring2 := String.sub tempstring 1 !length2
 					end
 					else
 					begin
@@ -250,8 +251,8 @@ let rec parse_string s index isLambda length env =
 							nextpar := nextparClose
 						else
 							nextpar := nextparOpen;
-						length2 := length - (length - !nextpar );
-						newstring2 := String.sub s (index+1) !length2;
+						length2 := templength - (templength - !nextpar );
+						newstring2 := String.sub tempstring 1 !length2;
 						print_endline ("merde: "^(string_of_int !length2))
 					end;
 
@@ -260,7 +261,7 @@ let rec parse_string s index isLambda length env =
 					
 					print_endline ("length nextpar index: "^(string_of_int length)^" "^(string_of_int !nextpar)^" "^(string_of_int index));
 					(*let length2 = ref (*(!nextpar-index-1)*)(*(length - (length - (!nextpar +1)))*)(!nextpar - (index+1)) in*)
-					let length1 = (length-(!nextpar)) in
+					let length1 = (templength-(!nextpar)) in
 					print_endline ("TEST: "^(string_of_int !length2));
 					if (!length2 == 0) then
 						length2 := length-2;
@@ -283,30 +284,30 @@ let rec parse_string s index isLambda length env =
 								let newenv = ref env in
 								if (!nextpar < length-1) then
 									begin
-										let newstring1 = String.sub s (!nextpar) length1 in
+										let newstring1 = String.sub tempstring (!nextpar) length1 in
 										(*print_endline ("newstring1[length]: "^(string_of_int length1));
 										print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int length1));*)
 										print_endline ("JE PARSE: "^newstring1);
-										parse_string newstring1 0 isLambda length1 !newenv;
+										parse_string newstring1 0 isLambda length1 [];
 										newenv := []
 									end;
 									print_endline ("JE PARSE: "^(!newstring2));
-									parse_string !newstring2 0 isLambda !length2 !newenv;
+									parse_string !newstring2 0 isLambda !length2 [];
 							| _ ->
 								print_endline "PASLAMBDA";
 								let newenv = ref env in
-								if (!nextpar < length-1) then
+								if (!nextpar < templength-1) then
 									begin
-										let newstring1 = String.sub s (!nextpar) length1 in
+										let newstring1 = String.sub tempstring (!nextpar) length1 in
 										(*print_endline ("newstring1[length]: "^(string_of_int length1));
 										print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int length1));*)
 										(*print_endline ("newstring1: "^newstring1);*)
 										print_endline ("JE PARSE: "^newstring1);
-										parse_string newstring1 0 isLambda length1 !newenv;
+										parse_string newstring1 0 isLambda length1 [];
 										newenv := []
 									end;
 									print_endline ("JE PARSE: "^(!newstring2));
-								parse_string !newstring2 0 isLambda !length2 !newenv;
+								parse_string !newstring2 0 isLambda !length2 [];
 					end
 				| ')' ->
 					parse_string s (index+1) isLambda length env;
