@@ -22,6 +22,8 @@ type term =
 let envnum = ref 0;;
 let maxenvnum = ref 0;;*)
 let treelist = ref [];;
+let lambdalist = ref [];;
+let parlevel = ref 0;;
 
 let rec build_tree env tree = 
 		begin
@@ -201,14 +203,60 @@ let rec search_point string current length =
 (*let rec search_point string index length =
 	if (string.[index+1] == '.') then
 *)		
-let rec parse_string s index isLambda length env =
-	if (index = (length)) then
+let rec parse_string s index isLambda length env needtobuild =
+	print_endline ("parse_string "^s);
+	if (index = length) then
 		begin
+			if (env == []) then
+				show_tree (List.hd !treelist)
+			else
+			begin
 			let listLambda = List.find_all (fun x -> fst(x) = true) env in
 			let notLambda = List.rev(List.filter (fun x -> fst(x) = false) env) in
 			let newEnv = List.append listLambda notLambda in
+			let newenv = ref env in
+					(*if (List.length !lambdalist) > 0 then
+						begin
+							print_endline "OKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKk";
+							let list = List.find_all (fun x -> fst(x) = !parlevel) !lambdalist in
+							
+							List.iter ( fun x -> 
+								
+								let elem = snd(x) in
+								print_string (elem^" ");
+								newenv := ((true, elem)::!newenv)) list;
+								lambdalist := [];
+							print_string (string_of_int (List.length !newenv));
+						end;*)
+			print_endline ("KKKKKKKK "^(string_of_int (List.length !newenv)));
 			print_endline "build";
 			let tree = build_tree newEnv [] in
+			treelist := List.append !treelist (tree::[]);
+			print_endline "end build";
+			show_tree tree;
+			print_endline "";
+			print_endline "end view";
+			print_endline ("treelist[length]: "^(string_of_int (List.length !treelist)));
+			
+			if (List.length !treelist) > 1 then
+				begin
+					let mergedtree = App((List.hd !treelist), tree) in
+					print_endline "MERGE";
+					show_tree mergedtree;
+					treelist := mergedtree::[]
+				end
+			end
+		end
+	else
+		begin
+			match s.[index] with
+				| '(' ->
+					parlevel := !parlevel + 1;
+					print_endline ("ùer"^(string_of_bool needtobuild));
+					if (needtobuild) then
+						begin
+							print_endline "needtobuild";
+							let tree = build_tree env [] in
 			treelist := List.append !treelist (tree::[]);
 			print_endline "end build";
 			show_tree tree;
@@ -216,15 +264,15 @@ let rec parse_string s index isLambda length env =
 			print_endline ("treelist[length]: "^(string_of_int (List.length !treelist)));
 			if (List.length !treelist) > 1 then
 				begin
-					let mergedtree = merge_tree tree (List.hd !treelist) in
+					let mergedtree = App((List.hd !treelist), tree) in
 					show_tree mergedtree;
 					treelist := mergedtree::[]
-				end
-		end
-	else
-		begin
-			match s.[index] with
-				| '(' ->
+				end;
+						end;
+			
+					
+					
+					
 					let tempstring = String.sub s index (length-index) in
 					let templength = (length-index) in
 					print_endline "(";
@@ -280,7 +328,7 @@ let rec parse_string s index isLambda length env =
 								print_endline "LAMBDA";
 								
 								print_endline "ok";
-								
+								lambdalist := (!parlevel, (String.sub !newstring2 1 (!length2-1)))::!lambdalist;
 								let newenv = ref env in
 								if (!nextpar < length-1) then
 									begin
@@ -288,14 +336,18 @@ let rec parse_string s index isLambda length env =
 										(*print_endline ("newstring1[length]: "^(string_of_int length1));
 										print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int length1));*)
 										print_endline ("JE PARSE: "^newstring1);
-										parse_string newstring1 0 isLambda length1 [];
+										parse_string newstring1 0 isLambda length1 [] false;
 										newenv := []
 									end;
-									print_endline ("JE PARSE: "^(!newstring2));
-									parse_string !newstring2 0 isLambda !length2 [];
+									(*print_endline ("JE PARSE: "^(!newstring2));
+									parse_string !newstring2 0 isLambda !length2 [] false;*)
+									
 							| _ ->
 								print_endline "PASLAMBDA";
 								let newenv = ref env in
+								
+									print_endline ("JE PARSE: "^(!newstring2));
+								parse_string !newstring2 0 isLambda !length2 [] false;
 								if (!nextpar < templength-1) then
 									begin
 										let newstring1 = String.sub tempstring (!nextpar) length1 in
@@ -303,33 +355,47 @@ let rec parse_string s index isLambda length env =
 										print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int length1));*)
 										(*print_endline ("newstring1: "^newstring1);*)
 										print_endline ("JE PARSE: "^newstring1);
-										parse_string newstring1 0 isLambda length1 [];
+										parse_string newstring1 0 isLambda length1 [] false;
 										newenv := []
 									end;
-									print_endline ("JE PARSE: "^(!newstring2));
-								parse_string !newstring2 0 isLambda !length2 [];
 					end
 				| ')' ->
-					parse_string s (index+1) isLambda length env;
+					print_endline ")";
+					print_endline "OK";
+					let newenv = ref env in
+					if (List.exists (fun x -> fst(x) = !parlevel) !lambdalist) then
+						begin
+							print_endline "OK";
+							let list = List.find_all (fun x -> fst(x) = !parlevel) !lambdalist in
+							lambdalist := List.filter (fun x -> fst(x) <> !parlevel) !lambdalist;
+							List.iter ( fun x -> 
+								
+								let elem = snd(x) in
+								print_string (elem^" ");
+								newenv := ((true, elem)::!newenv)) list;
+						end;
+						parlevel := !parlevel - 1;
+					parse_string s (index+1) isLambda length !newenv needtobuild;
 				| 'l' ->
 						let lambda = String.make 1 s.[index+1] in
 						print_endline ("l -> "^lambda);
 						let updatedEnv = List.append env ((true,lambda)::[]) in
-						parse_string s (index+2) true length updatedEnv;
+						parse_string s (index+2) true length updatedEnv false;
 				| '.' ->
 					print_endline ".";
-					parse_string s (index+1) false length env;
+					parse_string s (index+1) false length env true;
 				| c ->
 					let char = String.make 1 c in	
 					print_endline ("c -> "^char);
 					let updatedEnv = List.append env ((isLambda,char)::[]) in
-					parse_string s (index+1) isLambda length updatedEnv;
+					print_endline ("bool "^(string_of_bool needtobuild));
+					parse_string s (index+1) isLambda length updatedEnv needtobuild;
 		end
 ;;
 
 
 let parse s length = 
 	parse_string s 0 false length [];;
-let pre_parse s = parse s (String.length s);; 
+let pre_parse s = parse s (String.length s) false;; 
 (*let test s = print_int (search_par s (-1) 0 (String.length s));;*)
 let () = pre_parse (read_line());;
