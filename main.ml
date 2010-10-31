@@ -65,7 +65,7 @@ let rec build_tree tree =
 					if (!globalenv == []) then
 						Var(snd(element))
 					else
-						App(Var(snd(element)),(build_tree tree))
+						App((build_tree tree), Var(snd(element)))
 			end
 		end
 ;;
@@ -109,23 +109,31 @@ let rec search_par first second string level current length =
 ;;
 
 let merge_tree a =
-	if (List.length !treelist) > 1 then
+	if ((List.length !treelist) > 1) && (List.length !globalenv) == 0 then
 		begin
 			print_endline "MERGE_TREE 1";
+			print_endline ("parlevel"^(string_of_int !parlevel));
 			let treelisttemp = List.find_all(fun x -> x.level == !parlevel) !treelist in
 			if (List.length treelisttemp) > 1 then
 				begin
-					let tree1 = (List.hd treelisttemp) in
-					let tree2 = (List.hd (List.tl treelisttemp)) in
-					let level = tree1.level in
-					let mergedtree = new_tree(App(tree1.structure, tree2.structure), level-1) in
-					treelist := List.filter (fun x -> 
-						(x.number <> tree1.number) && (x.number <> tree2.number)) !treelist;
-					print_endline "MERGE";
-					show_tree mergedtree.structure;
-					treelist := mergedtree::[]
+					print_endline "MERGE_TREE 11";
+					let templist = ref (List.find_all(fun x -> x.level == !parlevel) !treelist) in
+					while (List.length !treelist) > 1 do
+						templist := List.find_all(fun x -> x.level == !parlevel) !treelist;
+						let tree1 = (List.hd !templist) in
+						let tree2 = (List.hd (List.tl !templist)) in
+						let level = tree1.level in
+						let mergedtree = new_tree(App(tree1.structure, tree2.structure), level-1) in
+						treelist := List.filter (fun x -> 
+							(x.number <> tree1.number) && (x.number <> tree2.number)) !treelist;
+						print_endline "MERGE";
+						show_tree mergedtree.structure;
+						treelist := List.append !treelist (mergedtree::[]);
+					done;
+					(*show_tree mergedtree.structure;
+					treelist := mergedtree::[]*)
 				end
-			else
+			else if (!parlevel == 0) then
 				begin
 				print_endline "MERGE_TREE 2";
 				let tree1 = (List.hd !treelist) in
@@ -142,6 +150,20 @@ let merge_tree a =
 				print_endline (string_of_int mergedtree.level);
 				treelist := mergedtree::[]
 				end
+		end
+	else if ((List.length !globalenv) > 0) && (List.length !treelist) == 1 then
+		begin
+			print_endline "MERGE_TREE 3";
+			print_endline "AFFICHAGE";
+				List.iter (fun x -> 
+					show_tree (x.structure);
+					print_endline "";) !treelist;
+				print_endline "END AFFICHAGE";
+			print_endline "ENDMERGE_TREE 3";
+			let tree2 = new_tree(build_tree [], !parlevel) in
+			let tree1 = List.hd !treelist in
+			let structure = App(tree1.structure, tree2.structure) in
+			treelist := (new_tree(structure, tree1.level))::[];
 		end
 ;;
 
@@ -185,7 +207,14 @@ let rec parse_string s index isLambda length needtobuild =
 					print_endline "END MERGE";
 				end;
 				print_endline ("treelist[length]: "^(string_of_int (List.length !treelist)));
-			merge_tree "test";
+				print_endline "AFFICHAGE";
+				List.iter (fun x -> 
+					show_tree (x.structure);
+					print_string (" -> "^(string_of_int x.level));
+					print_endline "";) !treelist;
+				print_endline "END AFFICHAGE";
+				merge_tree "test";
+				
 			end
 		end
 	else
@@ -311,13 +340,13 @@ let rec parse_string s index isLambda length needtobuild =
 
 					if ((needtobuild == false) && ((List.length !globalenv)>0)) then
 						begin
-							let listLambda = List.find_all (fun x -> fst(x) = true) !globalenv in
+							(*let listLambda = List.find_all (fun x -> fst(x) = true) !globalenv in
 							let notLambda = List.rev(List.filter (fun x -> fst(x) = false) !globalenv) in
 							let newEnv = List.append listLambda notLambda in
-							globalenv := newEnv;
+							globalenv := newEnv;*)
 							merge_tree "test";
 							print_endline "BUILDTREESPEC";
-							show_tree (List.hd !treelist).structure;
+							(*show_tree (List.hd !treelist).structure;*)
 							print_endline "";
 						end;
 
@@ -373,5 +402,5 @@ let pre_parse s =
 ;; 
 
 let () = 
-	pre_parse (read_line())
-	(*pre_parse ("(lxyz.xz(yz))((lxy.x)(lxyz.xz(yz)))(lxy.x)")*);;
+	(*pre_parse (read_line())*)
+	pre_parse ("(lxyz.xz(yz))((lxy.x)(lxyz.xz(yz)))(lxy.x)");;
