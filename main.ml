@@ -204,7 +204,7 @@ let rec search_point string current length =
 	if (string.[index+1] == '.') then
 *)		
 let rec parse_string s index isLambda length env needtobuild =
-	print_endline ("parse_string "^s);
+	(*print_endline ("parse_string "^s);*)
 	if (index = length) then
 		begin
 			if (env == []) then
@@ -252,11 +252,14 @@ let rec parse_string s index isLambda length env needtobuild =
 			match s.[index] with
 				| '(' ->
 					parlevel := !parlevel + 1;
-					print_endline ("ùer"^(string_of_bool needtobuild));
+					print_endline ("needtobuild? "^(string_of_bool needtobuild));
 					if (needtobuild) then
 						begin
 							print_endline "needtobuild";
-							let tree = build_tree env [] in
+							let listLambda = List.find_all (fun x -> fst(x) = true) env in
+							let notLambda = List.rev(List.filter (fun x -> fst(x) = false) env) in
+							let newEnv = List.append listLambda notLambda in
+							let tree = build_tree newEnv [] in
 			treelist := List.append !treelist (tree::[]);
 			print_endline "end build";
 			show_tree tree;
@@ -276,7 +279,7 @@ let rec parse_string s index isLambda length env needtobuild =
 					let tempstring = String.sub s index (length-index) in
 					let templength = (length-index) in
 					print_endline "(";
-					print_endline ("Actuelle: "^s);
+					(*print_endline ("Actuelle: "^s);*)
 					print_endline ("Actuelle2: "^tempstring);
 					let nextparClose = search_par ')' '(' tempstring 0 1 templength in
 					let nextparOpen = search_par '(' ')' tempstring 0 1 templength in
@@ -285,7 +288,7 @@ let rec parse_string s index isLambda length env needtobuild =
 					let nextpar = ref 0 in
 					if (s.[index+1] == 'l') then
 					begin
-						print_int (length-(index+1));
+						(*print_int (length-(index+1));*)
 						(*let string = String.sub s (index+1) (length-(index+1)) in*)
 						nextpar := search_point tempstring 0 templength;
 						length2 := (!nextpar - 1);
@@ -293,33 +296,33 @@ let rec parse_string s index isLambda length env needtobuild =
 					end
 					else
 					begin
-						print_endline ("nextparClose: "^(string_of_int(nextparClose)));
-						print_endline ("nextparOpen: "^(string_of_int(nextparOpen)));
+						(*print_endline ("nextparClose: "^(string_of_int(nextparClose)));
+						print_endline ("nextparOpen: "^(string_of_int(nextparOpen)));*)
 						if (nextparClose <> -1 && (nextparClose < nextparOpen) || (nextparOpen == -1)) then
 							nextpar := nextparClose
 						else
 							nextpar := nextparOpen;
 						length2 := templength - (templength - !nextpar );
 						newstring2 := String.sub tempstring 1 !length2;
-						print_endline ("merde: "^(string_of_int !length2))
+						(*print_endline ("merde: "^(string_of_int !length2))*)
 					end;
 
 					(*if (s.[index] == 'l') then
 						nextpar = search_point (index+1) length;*)
 					
-					print_endline ("length nextpar index: "^(string_of_int length)^" "^(string_of_int !nextpar)^" "^(string_of_int index));
+					(*print_endline ("length nextpar index: "^(string_of_int length)^" "^(string_of_int !nextpar)^" "^(string_of_int index));*)
 					(*let length2 = ref (*(!nextpar-index-1)*)(*(length - (length - (!nextpar +1)))*)(!nextpar - (index+1)) in*)
 					let length1 = (templength-(!nextpar)) in
-					print_endline ("TEST: "^(string_of_int !length2));
+					(*print_endline ("TEST: "^(string_of_int !length2));*)
 					if (!length2 == 0) then
 						length2 := length-2;
 						
-					print_endline ("nextpar: "^(string_of_int(!nextpar)));
+					(*print_endline ("nextpar: "^(string_of_int(!nextpar)));
 					print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int !length2));
-					print_endline ("s: "^s);
+					print_endline ("s: "^s);*)
 					(*let newstring2 = String.sub s (index+1) !length2 in*)
 						(*print_endline (string_of_int !length2);*)
-						print_endline ("newstring2: "^(!newstring2));
+						(*print_endline ("newstring2: "^(!newstring2));*)
 						(*parse_string newstring2 0 isLambda !length2 env;*)
 					
 					begin
@@ -327,8 +330,16 @@ let rec parse_string s index isLambda length env needtobuild =
 							| 'l' ->
 								print_endline "LAMBDA";
 								
-								print_endline "ok";
-								lambdalist := (!parlevel, (String.sub !newstring2 1 (!length2-1)))::!lambdalist;
+								(*print_endline "ok";*)
+								let templambda = String.sub !newstring2 1 (!length2-1) in
+										let i = ref 0 in
+										let lengthlambda = String.length templambda in
+										while (!i < lengthlambda) do
+											lambdalist := (!parlevel, (String.make 1 templambda.[!i]))::!lambdalist;
+											i := !i + 1
+										done;
+
+								
 								let newenv = ref env in
 								if (!nextpar < length-1) then
 									begin
@@ -361,11 +372,11 @@ let rec parse_string s index isLambda length env needtobuild =
 					end
 				| ')' ->
 					print_endline ")";
-					print_endline "OK";
+					(*print_endline "OK";*)
 					let newenv = ref env in
 					if (List.exists (fun x -> fst(x) = !parlevel) !lambdalist) then
 						begin
-							print_endline "OK";
+							(*print_endline "OK";*)
 							let list = List.find_all (fun x -> fst(x) = !parlevel) !lambdalist in
 							lambdalist := List.filter (fun x -> fst(x) <> !parlevel) !lambdalist;
 							List.iter ( fun x -> 
