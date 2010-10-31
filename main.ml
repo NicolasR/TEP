@@ -324,6 +324,7 @@ let rec parse_string s index isLambda length needtobuild =
 										let i = ref 0 in
 										let lengthlambda = String.length templambda in
 										while (!i < lengthlambda) do
+											print_endline ("AddLambda par: "^(string_of_int !parlevel));
 											lambdalist := (!parlevel, (String.make 1 templambda.[!i]))::!lambdalist;
 											i := !i + 1
 										done;
@@ -331,7 +332,7 @@ let rec parse_string s index isLambda length needtobuild =
 							
 								if (!nextpar < length-1) then
 									begin
-										let newstring1 = String.sub tempstring (!nextpar) length1 in
+										let newstring1 = String.sub tempstring (!nextpar) (length1) in
 										(*print_endline ("newstring1[length]: "^(string_of_int length1));
 										print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int length1));*)
 										print_endline ("JE PARSE: "^newstring1);
@@ -347,27 +348,23 @@ let rec parse_string s index isLambda length needtobuild =
 								parse_string !newstring2 0 isLambda !length2 false;
 								if (!nextpar < templength-1) then
 									begin
-										let newstring1 = String.sub tempstring (!nextpar) length1 in
+										let newstring1 = String.sub tempstring (!nextpar+1) (length1-1) in
 										(*print_endline ("newstring1[length]: "^(string_of_int length1));
 										print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int length1));*)
 										(*print_endline ("newstring1: "^newstring1);*)
 										print_endline ("JE PARSE: "^newstring1);
-										parse_string newstring1 0 isLambda length1 false;
+										parse_string newstring1 0 isLambda (length1-1) false;
 									end;
 					end
 				| ')' ->
 					print_endline ")";
-					print_endline ("par: "^(string_of_int (!parlevel -1)));
-					if (((!parlevel - 1) == -1) && (index = (length-1))) then
-						begin
-							print_endline "YOUPI";
-
-						end;
+					print_endline ("par: "^(string_of_int (!parlevel-1)));
+					
 
 					(*print_endline "OK";*)
 					if (List.exists (fun x -> fst(x) = !parlevel) !lambdalist) then
 						begin
-							(*print_endline "OK";*)
+							print_endline "YESPAR";
 							let list = List.find_all (fun x -> fst(x) = !parlevel) !lambdalist in
 							lambdalist := List.filter (fun x -> fst(x) <> !parlevel) !lambdalist;
 							List.iter ( fun x -> 
