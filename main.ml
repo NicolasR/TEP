@@ -24,34 +24,36 @@ let maxenvnum = ref 0;;*)
 let treelist = ref [];;
 let lambdalist = ref [];;
 let parlevel = ref 0;;
+let globalenv = ref [];;
 
-let rec build_tree env tree = 
+let rec build_tree tree = 
 		begin
-			print_endline ("build_tree[sizeEnv]: "^string_of_int(List.length env));
-			let element = List.hd env in
+			print_endline ("build_tree[sizeEnv]: "^string_of_int(List.length !globalenv));
+			let element = List.hd !globalenv in
+			globalenv := List.tl !globalenv;
 			print_endline (snd(element));
 			let isLambda = fst(element) in
 			match isLambda with
 				| true ->
 					print_endline "true"; 
-					if (List.tl env) == [] then
+					if (!globalenv) == [] then
 						begin
 							let firsttree = List.hd !treelist in
 							treelist := List.tl !treelist;
 							Lambda(snd(element), firsttree)
 						end
 					else
-						Lambda(snd(element), build_tree (List.tl env) tree);
+						Lambda(snd(element), build_tree tree);
 				| false -> 
 					print_endline "false"; 
-					print_endline ("TEST"^(string_of_int(List.length env)));
-					if ((List.tl env) == []) then
+					print_endline ("TEST"^(string_of_int(List.length !globalenv)));
+					if (!globalenv == []) then
 						Var(snd(element))
 					else
 						begin
 							(*let firsttree = List.hd !treelist in*)
 							(*treelist := List.tl !treelist;*)
-						App((build_tree (List.tl env) tree),Var(snd(element)))
+						App((build_tree tree),Var(snd(element)))
 						(*App(firsttree,Var(snd(element)))*)
 						end
 		end
@@ -203,34 +205,20 @@ let rec search_point string current length =
 (*let rec search_point string index length =
 	if (string.[index+1] == '.') then
 *)		
-let rec parse_string s index isLambda length env needtobuild =
+let rec parse_string s index isLambda length needtobuild =
 	(*print_endline ("parse_string "^s);*)
 	if (index = length) then
 		begin
-			if (env == []) then
+			if (!globalenv == []) then
 				show_tree (List.hd !treelist)
 			else
 			begin
-			let listLambda = List.find_all (fun x -> fst(x) = true) env in
-			let notLambda = List.rev(List.filter (fun x -> fst(x) = false) env) in
+			let listLambda = List.find_all (fun x -> fst(x) = true) !globalenv in
+			let notLambda = List.rev(List.filter (fun x -> fst(x) = false) !globalenv) in
 			let newEnv = List.append listLambda notLambda in
-			let newenv = ref env in
-					(*if (List.length !lambdalist) > 0 then
-						begin
-							print_endline "OKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKk";
-							let list = List.find_all (fun x -> fst(x) = !parlevel) !lambdalist in
-							
-							List.iter ( fun x -> 
-								
-								let elem = snd(x) in
-								print_string (elem^" ");
-								newenv := ((true, elem)::!newenv)) list;
-								lambdalist := [];
-							print_string (string_of_int (List.length !newenv));
-						end;*)
-			print_endline ("KKKKKKKK "^(string_of_int (List.length !newenv)));
+			globalenv := newEnv;
 			print_endline "build";
-			let tree = build_tree newEnv [] in
+			let tree = build_tree [] in
 			treelist := List.append !treelist (tree::[]);
 			print_endline "end build";
 			show_tree tree;
@@ -256,10 +244,11 @@ let rec parse_string s index isLambda length env needtobuild =
 					if (needtobuild) then
 						begin
 							print_endline "needtobuild";
-							let listLambda = List.find_all (fun x -> fst(x) = true) env in
-							let notLambda = List.rev(List.filter (fun x -> fst(x) = false) env) in
+							let listLambda = List.find_all (fun x -> fst(x) = true) !globalenv in
+							let notLambda = List.rev(List.filter (fun x -> fst(x) = false) !globalenv) in
 							let newEnv = List.append listLambda notLambda in
-							let tree = build_tree newEnv [] in
+							globalenv := newEnv;
+							let tree = build_tree [] in
 			treelist := List.append !treelist (tree::[]);
 			print_endline "end build";
 			show_tree tree;
@@ -339,26 +328,23 @@ let rec parse_string s index isLambda length env needtobuild =
 											i := !i + 1
 										done;
 
-								
-								let newenv = ref env in
+							
 								if (!nextpar < length-1) then
 									begin
 										let newstring1 = String.sub tempstring (!nextpar) length1 in
 										(*print_endline ("newstring1[length]: "^(string_of_int length1));
 										print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int length1));*)
 										print_endline ("JE PARSE: "^newstring1);
-										parse_string newstring1 0 isLambda length1 [] false;
-										newenv := []
+										parse_string newstring1 0 isLambda length1 false;
 									end;
 									(*print_endline ("JE PARSE: "^(!newstring2));
 									parse_string !newstring2 0 isLambda !length2 [] false;*)
 									
 							| _ ->
 								print_endline "PASLAMBDA";
-								let newenv = ref env in
 								
 									print_endline ("JE PARSE: "^(!newstring2));
-								parse_string !newstring2 0 isLambda !length2 [] false;
+								parse_string !newstring2 0 isLambda !length2 false;
 								if (!nextpar < templength-1) then
 									begin
 										let newstring1 = String.sub tempstring (!nextpar) length1 in
@@ -366,8 +352,7 @@ let rec parse_string s index isLambda length env needtobuild =
 										print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int length1));*)
 										(*print_endline ("newstring1: "^newstring1);*)
 										print_endline ("JE PARSE: "^newstring1);
-										parse_string newstring1 0 isLambda length1 [] false;
-										newenv := []
+										parse_string newstring1 0 isLambda length1 false;
 									end;
 					end
 				| ')' ->
@@ -380,7 +365,6 @@ let rec parse_string s index isLambda length env needtobuild =
 						end;
 
 					(*print_endline "OK";*)
-					let newenv = ref env in
 					if (List.exists (fun x -> fst(x) = !parlevel) !lambdalist) then
 						begin
 							(*print_endline "OK";*)
@@ -390,30 +374,30 @@ let rec parse_string s index isLambda length env needtobuild =
 								
 								let elem = snd(x) in
 								print_string (elem^" ");
-								newenv := ((true, elem)::!newenv)) list;
+								globalenv := ((true, elem)::!globalenv)) list;
 						end;
 						parlevel := !parlevel - 1;
-					parse_string s (index+1) isLambda length !newenv needtobuild;
+					parse_string s (index+1) isLambda length needtobuild;
 				| 'l' ->
 						let lambda = String.make 1 s.[index+1] in
 						print_endline ("l -> "^lambda);
-						let updatedEnv = List.append env ((true,lambda)::[]) in
-						parse_string s (index+2) true length updatedEnv false;
+						globalenv := List.append !globalenv ((true,lambda)::[]);
+						parse_string s (index+2) true length false;
 				| '.' ->
 					print_endline ".";
-					parse_string s (index+1) false length env true;
+					parse_string s (index+1) false length true;
 				| c ->
 					let char = String.make 1 c in	
 					print_endline ("c -> "^char);
-					let updatedEnv = List.append env ((isLambda,char)::[]) in
+					globalenv := List.append !globalenv ((isLambda,char)::[]);
 					print_endline ("bool "^(string_of_bool needtobuild));
-					parse_string s (index+1) isLambda length updatedEnv needtobuild;
+					parse_string s (index+1) isLambda length needtobuild;
 		end
 ;;
 
 
 let parse s length = 
-	parse_string s 0 false length [];;
+	parse_string s 0 false length;;
 let pre_parse s = parse s (String.length s) false;; 
 (*let test s = print_int (search_par s (-1) 0 (String.length s));;*)
 let () = pre_parse (read_line());;
