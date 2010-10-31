@@ -29,6 +29,16 @@ let globalenv = ref [];;
 let rec build_tree tree = 
 		begin
 			print_endline ("build_tree[sizeEnv]: "^string_of_int(List.length !globalenv));
+			print_endline ("build_tree[sizeTreelist]: "^string_of_int(List.length !treelist));
+			(*if (((List.length !globalenv) == 0) && (List.length (!treelist) == 2)) then
+				begin
+					let tree1 = List.hd !treelist in
+					let tree2 = List.hd (List.tl !treelist) in
+					treelist := [];
+					App(tree1, tree2);
+				end
+			else*)
+			begin
 			let element = List.hd !globalenv in
 			globalenv := List.tl !globalenv;
 			print_endline (snd(element));
@@ -56,6 +66,7 @@ let rec build_tree tree =
 						App((build_tree tree),Var(snd(element)))
 						(*App(firsttree,Var(snd(element)))*)
 						end
+			end
 		end
 
 
@@ -210,7 +221,13 @@ let rec parse_string s index isLambda length needtobuild =
 	if (index = length) then
 		begin
 			if (!globalenv == []) then
-				show_tree (List.hd !treelist)
+				begin
+					if (List.length !treelist == 2) then
+						let tree1 = List.hd !treelist in
+						let tree2 = List.hd (List.tl !treelist) in
+						treelist := App(tree1, tree2)::[];
+						show_tree (List.hd !treelist)
+				end
 			else
 			begin
 			let listLambda = List.find_all (fun x -> fst(x) = true) !globalenv in
@@ -241,7 +258,7 @@ let rec parse_string s index isLambda length needtobuild =
 				| '(' -> print_endline ("par: "^(string_of_int (!parlevel +1)));
 					parlevel := !parlevel + 1;
 					print_endline ("needtobuild? "^(string_of_bool needtobuild));
-					if (needtobuild) then
+					if (needtobuild && (List.length !globalenv) > 0) then
 						begin
 							print_endline "needtobuild";
 							let listLambda = List.find_all (fun x -> fst(x) = true) !globalenv in
@@ -344,7 +361,7 @@ let rec parse_string s index isLambda length needtobuild =
 							| _ ->
 								print_endline "PASLAMBDA";
 								
-									print_endline ("JE PARSE: "^(!newstring2));
+								print_endline ("JE PARSE: "^(!newstring2));	
 								parse_string !newstring2 0 isLambda !length2 false;
 								if (!nextpar < templength-1) then
 									begin
@@ -355,11 +372,26 @@ let rec parse_string s index isLambda length needtobuild =
 										print_endline ("JE PARSE: "^newstring1);
 										parse_string newstring1 0 isLambda (length1-1) false;
 									end;
+									
 					end
 				| ')' ->
 					print_endline ")";
 					print_endline ("par: "^(string_of_int (!parlevel-1)));
-					
+					print_endline ("needtobuild"^(string_of_bool needtobuild));
+
+					if ((needtobuild == false) && ((List.length !globalenv)>0)) then
+						begin
+							let listLambda = List.find_all (fun x -> fst(x) = true) !globalenv in
+							let notLambda = List.rev(List.filter (fun x -> fst(x) = false) !globalenv) in
+							let newEnv = List.append listLambda notLambda in
+							globalenv := newEnv;
+							let tree = List.hd !treelist in
+							let tree2 = build_tree [] in
+							treelist := App(tree, tree2)::[];
+							print_endline "BUILDTREESPEC";
+							show_tree (List.hd !treelist);
+							print_endline "";
+						end;
 
 					(*print_endline "OK";*)
 					if (List.exists (fun x -> fst(x) = !parlevel) !lambdalist) then
@@ -367,13 +399,29 @@ let rec parse_string s index isLambda length needtobuild =
 							print_endline "YESPAR";
 							let list = List.find_all (fun x -> fst(x) = !parlevel) !lambdalist in
 							lambdalist := List.filter (fun x -> fst(x) <> !parlevel) !lambdalist;
+							globalenv := List.rev !globalenv;
 							List.iter ( fun x -> 
 								
 								let elem = snd(x) in
 								print_string (elem^" ");
 								globalenv := ((true, elem)::!globalenv)) list;
+								let tree = build_tree [] in
+								treelist := List.append !treelist (tree::[]);
+								show_tree (tree);
+								print_endline ("SIZE: "^(string_of_int (List.length !treelist)));
+								if (List.length !treelist) == 2 then
+									begin
+										let tree1 = tree in
+										let tree2 = List.hd !treelist in
+										treelist := App(tree2, tree1)::[];
+										show_tree ((List.hd !treelist));
+									end;
+
+								
+								print_endline "tt";
 						end;
 						parlevel := !parlevel - 1;
+
 					parse_string s (index+1) isLambda length needtobuild;
 				| 'l' ->
 						let lambda = String.make 1 s.[index+1] in
@@ -394,7 +442,15 @@ let rec parse_string s index isLambda length needtobuild =
 
 
 let parse s length = 
-	parse_string s 0 false length;;
-let pre_parse s = parse s (String.length s) false;; 
+	parse_string s 0 false length false;
+	print_endline "";
+	print_endline "****** FINAL TREE ******";
+	show_tree (List.hd !treelist);
+	print_endline "";;
+
+let pre_parse s = 
+	parse s (String.length s);; 
 (*let test s = print_int (search_par s (-1) 0 (String.length s));;*)
-let () = pre_parse (read_line());;
+let () = 
+	(*pre_parse (read_line())*)
+	pre_parse ("(lxyz.xz(yz))((lxy.x)(lxyz.xz(yz)))(lxy.x)");;
