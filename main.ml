@@ -250,7 +250,7 @@ let rec parse_string s index isLambda length env needtobuild =
 	else
 		begin
 			match s.[index] with
-				| '(' ->
+				| '(' -> print_endline ("par: "^(string_of_int (!parlevel +1)));
 					parlevel := !parlevel + 1;
 					print_endline ("needtobuild? "^(string_of_bool needtobuild));
 					if (needtobuild) then
@@ -298,10 +298,10 @@ let rec parse_string s index isLambda length env needtobuild =
 					begin
 						(*print_endline ("nextparClose: "^(string_of_int(nextparClose)));
 						print_endline ("nextparOpen: "^(string_of_int(nextparOpen)));*)
-						if (nextparClose <> -1 && (nextparClose < nextparOpen) || (nextparOpen == -1)) then
-							nextpar := nextparClose
-						else
-							nextpar := nextparOpen;
+						(*if (nextparClose <> -1 && (nextparClose < nextparOpen) || (nextparOpen == -1)) then*)
+							nextpar := nextparClose;
+						(*else
+							nextpar := nextparOpen;*)
 						length2 := templength - (templength - !nextpar );
 						newstring2 := String.sub tempstring 1 !length2;
 						(*print_endline ("merde: "^(string_of_int !length2))*)
@@ -372,6 +372,13 @@ let rec parse_string s index isLambda length env needtobuild =
 					end
 				| ')' ->
 					print_endline ")";
+					print_endline ("par: "^(string_of_int (!parlevel -1)));
+					if (((!parlevel - 1) == -1) && (index = (length-1))) then
+						begin
+							print_endline "YOUPI";
+
+						end;
+
 					(*print_endline "OK";*)
 					let newenv = ref env in
 					if (List.exists (fun x -> fst(x) = !parlevel) !lambdalist) then
