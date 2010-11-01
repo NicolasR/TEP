@@ -8,9 +8,29 @@ type term =
 
 let listeCharUtil = ["a";"b";"c";"d";"e";"f";"g";"h";"i";"j";"k";"m";"n";"o";"p";"q";"r";"s";"t";"u";"v";"w";"x";"y";"z"]
 
+let rec show_tree tree =
+	match tree with
+		| Lambda(l,t) ->
+			print_string "Lambda(\"";
+			print_string l;
+			print_string "\",";
+			show_tree t;
+			print_string ")";
+		| Var(x) ->
+			print_string "Var(\"";
+			print_string x;
+			print_string "\")";
+		| App(t1,t2) ->
+			print_string "App(";
+			show_tree t1;
+			print_string ", ";
+			show_tree t2;
+			print_string ")"
+			;;
+
 let rec rechercheLambda (arbre, l) =
 	match arbre with
-		| App(Lambda(x,y),_) -> (arbre, l)
+		| App(Lambda(x,y),_) -> (arbre, l@["ici"])
 		| App(x,_) -> rechercheLambda (x, l@["gauche"])
 		| Lambda(x,y) -> rechercheLambda (y, l@["bas"])
 		| _ -> (arbre , l);;
@@ -61,7 +81,7 @@ let rec listeNouveauNoms listeAChanger listeAEviter listeChar =
 	match listeAChanger with
 		| t::q when (estDansListe t listeAEviter) -> (match listeChar with
 																									| c::r when (estDansListe c listeAEviter) -> listeNouveauNoms listeAChanger listeAEviter r
-																									| c::r -> [(t,c)]@(listeNouveauNoms q listeAEviter listeCharUtil)
+																									| c::r -> [(t,c)]@(listeNouveauNoms q (listeAEviter@[c]) listeCharUtil)
 																									| _ -> [])
 		| t::q -> [(t,t)]@(listeNouveauNoms q listeAEviter listeCharUtil)
 		| _ -> [];;
@@ -97,8 +117,9 @@ let rec nouveauNom var listeNoms =
 let rec recreeArbreAlphaConv arbreOrigine listeChangement adresseChangement =
 	match arbreOrigine with
 		| App(x,y) -> (match adresseChangement with
+										| t::q when (t = "ici") -> App(((recreeArbreAlphaConv x listeChangement q), y))
 										| t::q when (t = "gauche") -> App((recreeArbreAlphaConv x listeChangement q), y)
-										| _ -> App((recreeArbreAlphaConv x listeChangement adresseChangement), y) 
+										| _ -> App((recreeArbreAlphaConv x listeChangement adresseChangement), (recreeArbreAlphaConv y listeChangement adresseChangement)) 
 								)
 		| Lambda(c,e) -> (match adresseChangement with
 										| t::q when (t = "bas") -> Lambda(c, (recreeArbreAlphaConv e listeChangement q))
@@ -111,8 +132,9 @@ let rec recreeArbreAlphaConv arbreOrigine listeChangement adresseChangement =
 let rec recreeArbreBetaRed arbreOrigine arbreACopier variableAChanger adresseChangement =
 	match arbreOrigine with
 		| App(x,y) -> (match adresseChangement with
+										| t::q when (t = "ici") -> recreeArbreBetaRed x arbreACopier variableAChanger q
 										| t::q when (t = "gauche") -> App((recreeArbreBetaRed x arbreACopier variableAChanger q), y)
-										| _ -> App((recreeArbreBetaRed x arbreACopier variableAChanger adresseChangement), y) 
+										| _ -> App((recreeArbreBetaRed x arbreACopier variableAChanger adresseChangement), (recreeArbreBetaRed y arbreACopier variableAChanger adresseChangement)) 
 								)
 		| Lambda(c,e) -> (match adresseChangement with
 										| t::q when (t = "bas") -> Lambda(c, (recreeArbreBetaRed e arbreACopier variableAChanger q))
@@ -137,27 +159,10 @@ let betaRed arbre =
 let alphaConv arbre =
 	let appPremierLambda = rechercheLambda (arbre, []) in
 		let listeChangeAFaire = listeChangement (fst(appPremierLambda)) in
+			afficheListeChangement listeChangeAFaire;
 			recreeArbreAlphaConv arbre listeChangeAFaire (snd(appPremierLambda));;
 
-let rec show_tree tree =
-	match tree with
-		| Lambda(l,t) ->
-			print_string "Lambda(";
-			print_string l;
-			print_string ",";
-			show_tree t;
-			print_string ")";
-		| Var(x) ->
-			print_string "Var(";
-			print_string x;
-			print_string ")";
-		| App(t1,t2) ->
-			print_string "App(";
-			show_tree t1;
-			print_string ", ";
-			show_tree t2;
-			print_string ")"
-			;;
+
 
 let rec estIdentique arbre1 arbre2 =
 	match arbre1 with
@@ -178,29 +183,26 @@ let rec dernierArbre listeArbre =
 		| [] -> raise EpicFail;;
 
 let rec operation arbre listeArbre =
+	
+(*	print_endline (read_line()); *)
+(*
 	print_endline "\nDEBUT OPERATION : ";
 	print_endline "\n arbre : ";
 	show_tree arbre;
 	print_endline "";
-	match listeArbre with
-		| t::q -> (
-							let dA = dernierArbre listeArbre in
-								if(estIdentique arbre dA) then
-									listeArbre
-								else
-									(let nouvelleArbre = (betaRed (alphaConv arbre)) in
-										(*print_endline "\n nouvelleArbre : ";
-										show_tree nouvelleArbre;
-										print_endline "";*)
-										operation nouvelleArbre (listeArbre@[nouvelleArbre])
-									)
-								)
-		| [] -> (let nouvelleArbre = (betaRed (alphaConv arbre)) in
-							(*print_endline "\n nouvelleArbre : ";
-							show_tree nouvelleArbre;
-							print_endline "";*)
-							operation nouvelleArbre ([arbre]@[nouvelleArbre])
-						)
+	*)
+			let dA = dernierArbre listeArbre in
+				let nouvelleArbre = (betaRed (alphaConv arbre)) in
+					(*
+					print_endline "\n\n\n nouveau \n\n";
+					show_tree nouvelleArbre;
+					print_endline "\n";
+					*)
+					if(estIdentique nouvelleArbre dA) then
+						(print_endline "estIdentique";
+						listeArbre)
+					else
+						operation nouvelleArbre (listeArbre@[nouvelleArbre]);;
 
 let rec afficheResultatOperation listeArbre =
 	match listeArbre with
@@ -210,10 +212,34 @@ let rec afficheResultatOperation listeArbre =
 		| [] -> print_endline "\nFin  affichage listeArbre";;
 
 let () =
-		let a = (App(App(Lambda("e", Lambda("b", App(Var("b"), Var("a")))), Lambda("b", App(Var("b"), Var("b")))),(App(Lambda("x", Lambda("y", App(Var("x"), Var("x")))), Lambda("y", App(Var("y"), Var("y"))))))) in
-			let test = operation a [] in
+		let a = App(App(Lambda("x", Lambda("y", Lambda("z", App(App(Var("x"),Var("z")),App(Var("y"),Var("z")))))), Lambda("x", Lambda("y", Var("x")))), Lambda("x", Lambda("y", Var("x")))) in
+			let test = operation a [a] in
 				print_endline "\n\n\n\n\n RESULTAT \n\n\n\n";
 				afficheResultatOperation test;;
+	
+	(* delta A
+	let a = (App(Lambda("x", App(Var("x"),Var("x"))), Lambda("x", Lambda("y", App(Var("x"), Var("y")))))) in
+			let test = operation a [a] in
+				print_endline "\n\n\n\n\n RESULTAT \n\n\n\n";
+				afficheResultatOperation test;;
+	*)
+
+	(* 	let a = (App(Lambda("x", App(Var("x"),Var("x"))), Lambda("x", Lambda("y", App(Var("x"), Var("y")))))) in
+			let test = operation a [] in
+				print_endline "\n\n\n\n\n               RESULTAT \n\n\n\n";
+				afficheResultatOperation test;;
+	*)
+	
+		(*	let a = App(Lambda("x",Lambda("y",App(Var("x"), Var("y")))), Lambda("x",Lambda("y",App(Var("x"), Var("y"))))) in
+			let alpha = (alphaConv a) in
+				let beta = (betaRed alpha) in
+					print_endline "ALPHA";
+					show_tree alpha;
+					print_endline "\nBETA";
+					show_tree beta;
+					print_endline "";
+					*)
+		(* *)
 			
 			
 			
