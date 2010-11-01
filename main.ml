@@ -24,6 +24,7 @@ let lambdalist = ref [];;
 let parlevel = ref 0;;
 let globalenv = ref [];;
 let treelist = ref [];;
+let correctpar = ref 0;;
 
 let rec build_tree tree level = 
 		begin
@@ -444,7 +445,13 @@ let rec parse_string s index isLambda length needtobuild =
 						parse_string s (index+2) true length false;
 				| '.' ->
 					print_endline ".";
-					parse_string s (index+1) false length true ;
+					if (s.[index+1] == '(') then
+						begin
+							correctpar := !correctpar + 1;
+							parse_string s (index+2) false length true
+						end
+					else
+						parse_string s (index+1) false length true ;
 				| c ->
 					let char = String.make 1 c in	
 					print_endline ("c -> "^char);
@@ -460,6 +467,7 @@ let parse s length =
 	print_endline "";
 	print_endline "****** FINAL TREE ******";
 	show_tree (List.hd !treelist).structure;
+	print_endline ("PAR: "^(string_of_int (!parlevel + !correctpar)));
 	print_endline ""
 ;;
 
@@ -468,5 +476,5 @@ let pre_parse s =
 ;; 
 
 let () = 
-	(*pre_parse (read_line())*)
-	pre_parse ("(lxyz.xz(yz))((lxyz.x(yz))(lxyz.x(yz))(lxyz.xz(yz)))((lxy.x)(lxy.x))");;
+	pre_parse (read_line())
+	(*pre_parse ("(lxyz.xz(yz))((lxyz.x(yz))(lxyz.x(yz))(lxyz.xz(yz)))((lxy.x)(lxy.x))")*);;
