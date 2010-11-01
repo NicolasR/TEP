@@ -26,6 +26,36 @@ let globalenv = ref [];;
 let treelist = ref [];;
 let correctpar = ref 0;;
 
+let rec print_tree tree isLambda isFirstLambda =
+	match tree with
+		| Var(x) ->
+			print_string x;
+		| App(x, y) ->
+			if (not(isFirstLambda)) then
+				print_string "(";
+			print_tree x isLambda isFirstLambda;
+			print_tree y isLambda isFirstLambda;
+			if (not(isFirstLambda)) then
+				print_string ")";
+		| Lambda(x,y) ->
+			begin
+			if (isFirstLambda) then
+				begin
+					print_string "(l";
+				end;
+				match y with
+					| Lambda(_,_) ->
+						print_string x;
+						print_tree y true false;
+					| _ ->
+						print_string x;
+						print_string ".";
+						print_tree y false false;
+
+				print_string ")";
+			end
+;;
+
 let rec build_tree tree level = 
 		begin
 			print_endline ("build_tree[sizeEnv]: "^string_of_int(List.length !globalenv));
@@ -468,7 +498,9 @@ let parse s length =
 	print_endline "****** FINAL TREE ******";
 	show_tree (List.hd !treelist).structure;
 	print_endline ("PAR: "^(string_of_int (!parlevel + !correctpar)));
-	print_endline ""
+	print_endline "";
+	print_endline "";
+	print_tree (List.hd !treelist).structure true true;
 ;;
 
 let pre_parse s = 
