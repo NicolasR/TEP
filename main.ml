@@ -4,9 +4,7 @@ type term =
 | App of term * term
 
 
-let treenum = ref 1;;
-let incr_treenum = 
-	treenum := !treenum + 1;;
+let treenum = ref 0;;
 
 type tree = {
   level : int;
@@ -15,14 +13,12 @@ type tree = {
 };;
 
 let new_tree (s, l) = 
-	let newnumber = !treenum in
-	incr_treenum;
+	treenum := !treenum + 1;
 {
 	level = l;
-	number = newnumber;
+	number = !treenum;
 	structure = s;
 }
-;;
 
 let lambdalist = ref [];;
 let parlevel = ref 0;;
@@ -52,7 +48,8 @@ let rec build_tree tree level =
 								end
 							else
 								begin
-									let firsttree = List.find (fun x -> x.level == level) !treelist in
+									print_endline ("LOOK LEVEL: "^(string_of_int level));
+									let firsttree = List.find (fun x -> x.level == level) (List.rev !treelist) in
 									treelist := List.filter (fun x -> x.number <> firsttree.number) !treelist;
 									Lambda(snd(element), firsttree.structure)
 								end
@@ -109,6 +106,10 @@ let rec search_par first second string level current length =
 ;;
 
 let merge_tree level =
+	
+	print_endline ("CALL MERGE_TREE "^(string_of_int level));
+	print_endline ("[SIZE]Globalenv: "^(string_of_int (List.length !globalenv)));
+	print_endline ("[SIZE]Treelist: "^(string_of_int (List.length !treelist)));
 	if ((List.length !treelist) > 1) && (List.length !globalenv) == 0 then
 		begin
 			print_endline "MERGE_TREE 1";
@@ -117,10 +118,23 @@ let merge_tree level =
 			if (List.length treelisttemp) > 1 then
 				begin
 					print_endline "MERGE_TREE 11";
+					(*if (List.length !globalenv) > 0 then*)
+						begin
+							let list = List.find_all (fun x -> fst(x) = (!parlevel)) !lambdalist in
+							lambdalist := List.filter (fun x -> fst(x) <> (!parlevel)) !lambdalist;
+							globalenv := List.rev !globalenv;
+							List.iter ( fun x -> 
+										let elem = snd(x) in
+										globalenv := ((true, elem)::!globalenv)) list;
+										if (List.length !globalenv) > 0 then (** MARCHE mais pourquoi??? **)
+											begin
+										let tree = new_tree(build_tree [] (!parlevel), (!parlevel)) in
+										treelist := List.append !treelist (tree::[]);
+										end;
+						end;
 					print_endline ("SIZEBEFOREMERGE: "^(string_of_int(List.length !treelist)));
 					let templist = ref (List.find_all(fun x -> x.level == level) !treelist) in
 					while (List.length !templist) > 1 do
-						templist := List.rev(List.find_all(fun x -> x.level == level) !treelist);
 						let tree1 = (List.hd !templist) in
 						let tree2 = (List.hd (List.tl !templist)) in
 						let newlevel = tree1.level in
@@ -131,6 +145,7 @@ let merge_tree level =
 						show_tree mergedtree.structure;
 						print_endline ("->"^(string_of_int mergedtree.level));
 						treelist := List.append !treelist (mergedtree::[]);
+						templist := List.rev(List.find_all(fun x -> x.level == level) !treelist);
 					done;
 					print_endline ("SIZEAFTERMERGE: "^(string_of_int(List.length !treelist)));
 					(*show_tree mergedtree.structure;
@@ -156,15 +171,17 @@ let merge_tree level =
 		end
 	else if ((List.length !globalenv) > 0) && (List.length !treelist) >= 1 then
 		begin
-			print_string "MERGE_TREE 3 -";
-			print_endline (string_of_int level);
+			
+			print_string "MERGE_TREE 3 - ";
+			print_endline (string_of_int (List.length !treelist));
 			print_endline "AFFICHAGE";
-				List.iter (fun x -> 
-					show_tree (x.structure);
-					print_endline (string_of_int (x.level));
-					print_endline "";) !treelist;
-				print_endline "END AFFICHAGE";
+			List.iter (fun x -> 
+				show_tree (x.structure);
+				print_endline (string_of_int (x.level));
+				print_endline "";) !treelist;
+			print_endline "END AFFICHAGE";
 			print_endline "ENDMERGE_TREE 3";
+			print_endline ("SIZEBEFOREMERGE: "^(string_of_int(List.length !treelist)));
 			let listLambda = List.find_all (fun x -> fst(x) = true) !globalenv in
 			let notLambda = List.rev(List.filter (fun x -> fst(x) = false) !globalenv) in
 			let newEnv = List.append listLambda notLambda in
@@ -172,9 +189,13 @@ let merge_tree level =
 			let tree2 = new_tree(build_tree [] level, level) in
 			show_tree tree2.structure;
 			print_endline (string_of_int tree2.level);
-			let tree1 = List.hd !treelist in
+			let tree1 = List.hd (List.rev(!treelist)) in
 			let structure = App(tree1.structure, tree2.structure) in
-			treelist := (new_tree(structure, tree1.level))::[];
+			print_endline ("SIZEBEFOREFILTER: "^(string_of_int(List.length !treelist)));
+			treelist := List.filter (fun x -> x.number <> tree1.number) !treelist;
+			print_endline ("SIZEAFTERFILTER: "^(string_of_int(List.length !treelist)));
+			treelist := List.append !treelist ((new_tree(structure, tree1.level))::[]);
+			print_endline ("SIZEAFTERMERGE: "^(string_of_int(List.length !treelist)));
 		end
 ;;
 
@@ -188,9 +209,11 @@ let rec search_point string current length =
 
 
 let rec parse_string s index isLambda length needtobuild =
-	(*print_endline ("parse_string "^s);*)
+	print_endline ("parse_string "^s);
 	if (index = length) then
+		
 		begin
+			print_endline ("END parse_string "^s);
 			(*if (!globalenv == []) then
 				begin
 					if (List.length !treelist == 2) then
@@ -225,6 +248,7 @@ let rec parse_string s index isLambda length needtobuild =
 					print_string (" -> "^(string_of_int x.level));
 					print_endline "";) !treelist;
 				print_endline "END AFFICHAGE";
+				
 				merge_tree !parlevel;
 				
 			end
@@ -365,9 +389,10 @@ let rec parse_string s index isLambda length needtobuild =
 						end;
 
 					(*print_endline "OK";*)
+					print_endline ("ADDLAMBDA?");
 					if (List.exists (fun x -> fst(x) = (!parlevel)) !lambdalist) then
 						begin
-							print_endline "YESPAR";
+							print_endline "YES";
 							let list = List.find_all (fun x -> fst(x) = (!parlevel)) !lambdalist in
 							lambdalist := List.filter (fun x -> fst(x) <> (!parlevel)) !lambdalist;
 							globalenv := List.rev !globalenv;
@@ -383,6 +408,7 @@ let rec parse_string s index isLambda length needtobuild =
 								merge_tree (!parlevel);
 								print_endline "tt";
 						end;
+						print_endline ("GONEXT");
 					parlevel := !parlevel - 1;
 					parse_string s (index+1) isLambda length needtobuild;
 				| 'l' ->
@@ -416,5 +442,5 @@ let pre_parse s =
 ;; 
 
 let () = 
-	(*pre_parse (read_line())*)
-	pre_parse ("(lxyz.xz(yz))((lxy.x)(lxyz.xz(yz)))(lxy.x)");;
+	pre_parse (read_line())
+	(*pre_parse ("(lxyz.xz(yz))((lxy.x)(lxyz.xz(yz)))(lxy.x)")*);;
