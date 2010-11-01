@@ -29,7 +29,7 @@ let parlevel = ref 0;;
 let globalenv = ref [];;
 let treelist = ref [];;
 
-let rec build_tree tree = 
+let rec build_tree tree level = 
 		begin
 			print_endline ("build_tree[sizeEnv]: "^string_of_int(List.length !globalenv));
 			print_endline ("build_tree[sizeTreelist]: "^string_of_int(List.length !treelist));
@@ -52,20 +52,20 @@ let rec build_tree tree =
 								end
 							else
 								begin
-									let firsttree = List.find (fun x -> x.level == !parlevel) !treelist in
+									let firsttree = List.find (fun x -> x.level == level) !treelist in
 									treelist := List.filter (fun x -> x.number <> firsttree.number) !treelist;
 									Lambda(snd(element), firsttree.structure)
 								end
 						end
 					else
-						Lambda(snd(element), build_tree tree);
+						Lambda(snd(element), build_tree tree level);
 				| false -> 
 					print_endline "false"; 
 					print_endline ("TEST"^(string_of_int(List.length !globalenv)));
 					if (!globalenv == []) then
 						Var(snd(element))
 					else
-						App((build_tree tree), Var(snd(element)))
+						App((build_tree tree level), Var(snd(element)))
 			end
 		end
 ;;
@@ -108,41 +108,44 @@ let rec search_par first second string level current length =
 		end
 ;;
 
-let merge_tree a =
+let merge_tree level =
 	if ((List.length !treelist) > 1) && (List.length !globalenv) == 0 then
 		begin
 			print_endline "MERGE_TREE 1";
 			print_endline ("parlevel"^(string_of_int !parlevel));
-			let treelisttemp = List.find_all(fun x -> x.level == !parlevel) !treelist in
+			let treelisttemp = List.find_all(fun x -> x.level == level) !treelist in
 			if (List.length treelisttemp) > 1 then
 				begin
 					print_endline "MERGE_TREE 11";
-					let templist = ref (List.find_all(fun x -> x.level == !parlevel) !treelist) in
-					while (List.length !treelist) > 1 do
-						templist := List.find_all(fun x -> x.level == !parlevel) !treelist;
+					print_endline ("SIZEBEFOREMERGE: "^(string_of_int(List.length !treelist)));
+					let templist = ref (List.find_all(fun x -> x.level == level) !treelist) in
+					while (List.length !templist) > 1 do
+						templist := List.rev(List.find_all(fun x -> x.level == level) !treelist);
 						let tree1 = (List.hd !templist) in
 						let tree2 = (List.hd (List.tl !templist)) in
-						let level = tree1.level in
-						let mergedtree = new_tree(App(tree1.structure, tree2.structure), level-1) in
+						let newlevel = tree1.level in
+						let mergedtree = new_tree(App(tree1.structure, tree2.structure), newlevel-1) in
 						treelist := List.filter (fun x -> 
 							(x.number <> tree1.number) && (x.number <> tree2.number)) !treelist;
 						print_endline "MERGE";
 						show_tree mergedtree.structure;
+						print_endline ("->"^(string_of_int mergedtree.level));
 						treelist := List.append !treelist (mergedtree::[]);
 					done;
+					print_endline ("SIZEAFTERMERGE: "^(string_of_int(List.length !treelist)));
 					(*show_tree mergedtree.structure;
 					treelist := mergedtree::[]*)
 				end
-			else if (!parlevel == 0) then
+			else if (level == 0) then
 				begin
 				print_endline "MERGE_TREE 2";
 				let tree1 = (List.hd !treelist) in
 				let tree2 = (List.hd (List.tl !treelist)) in
 				
-				let level = ref tree1.level in
+				let newlevel = ref tree1.level in
 				if (tree2.level < tree1.level) then
-					level := tree2.level;
-				let mergedtree = new_tree(App(tree1.structure, tree2.structure), !level-1) in
+					newlevel := tree2.level;
+				let mergedtree = new_tree(App(tree1.structure, tree2.structure), !newlevel-1) in
 				treelist := List.filter (fun x -> 
 					(x.number <> tree1.number) && (x.number <> tree2.number)) !treelist;
 				print_endline "MERGE";
@@ -151,16 +154,24 @@ let merge_tree a =
 				treelist := mergedtree::[]
 				end
 		end
-	else if ((List.length !globalenv) > 0) && (List.length !treelist) == 1 then
+	else if ((List.length !globalenv) > 0) && (List.length !treelist) >= 1 then
 		begin
-			print_endline "MERGE_TREE 3";
+			print_string "MERGE_TREE 3 -";
+			print_endline (string_of_int level);
 			print_endline "AFFICHAGE";
 				List.iter (fun x -> 
 					show_tree (x.structure);
+					print_endline (string_of_int (x.level));
 					print_endline "";) !treelist;
 				print_endline "END AFFICHAGE";
 			print_endline "ENDMERGE_TREE 3";
-			let tree2 = new_tree(build_tree [], !parlevel) in
+			let listLambda = List.find_all (fun x -> fst(x) = true) !globalenv in
+			let notLambda = List.rev(List.filter (fun x -> fst(x) = false) !globalenv) in
+			let newEnv = List.append listLambda notLambda in
+			globalenv := newEnv;
+			let tree2 = new_tree(build_tree [] level, level) in
+			show_tree tree2.structure;
+			print_endline (string_of_int tree2.level);
 			let tree1 = List.hd !treelist in
 			let structure = App(tree1.structure, tree2.structure) in
 			treelist := (new_tree(structure, tree1.level))::[];
@@ -197,10 +208,11 @@ let rec parse_string s index isLambda length needtobuild =
 			if (List.length !globalenv) > 0 then
 				begin
 					print_endline "build";
-					let tree = new_tree(build_tree [], !parlevel) in
+					let tree = new_tree(build_tree [] !parlevel, !parlevel) in
 					treelist := List.append !treelist (tree::[]);
 					print_endline "end build";
 					show_tree tree.structure;
+					print_endline("->"^(string_of_int tree.level));
 					print_endline "";
 					print_endline "end view";
 					
@@ -213,7 +225,7 @@ let rec parse_string s index isLambda length needtobuild =
 					print_string (" -> "^(string_of_int x.level));
 					print_endline "";) !treelist;
 				print_endline "END AFFICHAGE";
-				merge_tree "test";
+				merge_tree !parlevel;
 				
 			end
 		end
@@ -230,14 +242,15 @@ let rec parse_string s index isLambda length needtobuild =
 							let notLambda = List.rev(List.filter (fun x -> fst(x) = false) !globalenv) in
 							let newEnv = List.append listLambda notLambda in
 							globalenv := newEnv;
-							let tree = new_tree(build_tree [], !parlevel) in
+							let tree = new_tree(build_tree [] (!parlevel-1), (!parlevel-1)) in
 							treelist := List.append !treelist (tree::[]);
 							print_endline "end build";
 							show_tree tree.structure;
+							print_endline ("->"^(string_of_int tree.level));
 							print_endline "end view";
 							print_endline ("treelist[length]: "^(string_of_int (List.length !treelist)));
 							
-							merge_tree "test";
+							merge_tree (!parlevel);
 						end;
 			
 
@@ -245,6 +258,7 @@ let rec parse_string s index isLambda length needtobuild =
 				let templength = (length-index) in
 				print_endline "(";
 				(*print_endline ("Actuelle: "^s);*)
+				print_string ("("^(string_of_int (!parlevel))^(")"));
 				print_endline ("Actuelle2: "^tempstring);
 				let nextparClose = search_par ')' '(' tempstring 0 1 templength in
 				(*let nextparOpen = search_par '(' ')' tempstring 0 1 templength in*)
@@ -311,7 +325,7 @@ let rec parse_string s index isLambda length needtobuild =
 										let newstring1 = String.sub tempstring (!nextpar) (length1) in
 										(*print_endline ("newstring1[length]: "^(string_of_int length1));
 										print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int length1));*)
-										print_endline ("JE PARSE: "^newstring1);
+										print_endline ("JE PARSE1: "^newstring1);
 										parse_string newstring1 0 isLambda length1 false;
 									end;
 									(*print_endline ("JE PARSE: "^(!newstring2));
@@ -320,7 +334,7 @@ let rec parse_string s index isLambda length needtobuild =
 							| _ ->
 								print_endline "PASLAMBDA";
 								
-								print_endline ("JE PARSE: "^(!newstring2));	
+								print_endline ("JE PARSE2: "^(!newstring2));	
 								parse_string !newstring2 0 isLambda !length2 false;
 								if (!nextpar < templength-1) then
 									begin
@@ -328,7 +342,7 @@ let rec parse_string s index isLambda length needtobuild =
 										(*print_endline ("newstring1[length]: "^(string_of_int length1));
 										print_endline ("newstring2: "^(string_of_int index)^" "^(string_of_int length1));*)
 										(*print_endline ("newstring1: "^newstring1);*)
-										print_endline ("JE PARSE: "^newstring1);
+										print_endline ("JE PARSE3: "^newstring1);
 										parse_string newstring1 0 isLambda (length1-1) false;
 									end;
 									
@@ -344,29 +358,29 @@ let rec parse_string s index isLambda length needtobuild =
 							let notLambda = List.rev(List.filter (fun x -> fst(x) = false) !globalenv) in
 							let newEnv = List.append listLambda notLambda in
 							globalenv := newEnv;*)
-							merge_tree "test";
+							merge_tree (!parlevel);
 							print_endline "BUILDTREESPEC";
 							(*show_tree (List.hd !treelist).structure;*)
 							print_endline "";
 						end;
 
 					(*print_endline "OK";*)
-					if (List.exists (fun x -> fst(x) = !parlevel) !lambdalist) then
+					if (List.exists (fun x -> fst(x) = (!parlevel)) !lambdalist) then
 						begin
 							print_endline "YESPAR";
-							let list = List.find_all (fun x -> fst(x) = !parlevel) !lambdalist in
-							lambdalist := List.filter (fun x -> fst(x) <> !parlevel) !lambdalist;
+							let list = List.find_all (fun x -> fst(x) = (!parlevel)) !lambdalist in
+							lambdalist := List.filter (fun x -> fst(x) <> (!parlevel)) !lambdalist;
 							globalenv := List.rev !globalenv;
 							List.iter ( fun x -> 
 								
 								let elem = snd(x) in
 								print_string (elem^" ");
 								globalenv := ((true, elem)::!globalenv)) list;
-								let tree = new_tree(build_tree [], !parlevel) in
+								let tree = new_tree(build_tree [] (!parlevel), (!parlevel)) in
 								treelist := List.append !treelist (tree::[]);
 								show_tree (tree.structure);
-								print_endline ("SIZE: "^(string_of_int (List.length !treelist)));
-								merge_tree "test";
+								print_endline (" -> "^(string_of_int tree.level));
+								merge_tree (!parlevel);
 								print_endline "tt";
 						end;
 					parlevel := !parlevel - 1;
@@ -378,7 +392,7 @@ let rec parse_string s index isLambda length needtobuild =
 						parse_string s (index+2) true length false;
 				| '.' ->
 					print_endline ".";
-					parse_string s (index+1) false length true;
+					parse_string s (index+1) false length true ;
 				| c ->
 					let char = String.make 1 c in	
 					print_endline ("c -> "^char);
