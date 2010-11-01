@@ -115,7 +115,8 @@ let merge_tree level =
 			print_endline "MERGE_TREE 1";
 			print_endline ("parlevel"^(string_of_int !parlevel));
 			let treelisttemp = List.find_all(fun x -> x.level == level) !treelist in
-			if (List.length treelisttemp) > 1 then
+			let lengthtreelistemp = List.length treelisttemp in
+			if (lengthtreelistemp > 1) then
 				begin
 					print_endline "MERGE_TREE 11";
 					(*if (List.length !globalenv) > 0 then*)
@@ -151,22 +152,47 @@ let merge_tree level =
 					(*show_tree mergedtree.structure;
 					treelist := mergedtree::[]*)
 				end
+			(*else if (level == 0 && (lengthtreelistemp == 1) && (List.length !treelist)>1) then
+				begin
+					print_endline "***ENTEST***";
+					let revtreelist = !treelist in 
+					let tree1 = List.find (fun x -> x.level = level) revtreelist in
+					show_tree tree1.structure;
+					print_endline "";
+					let tree2 = List.hd (List.tl revtreelist) in
+					let mergedtree = new_tree(App(tree1.structure, tree2.structure), tree2.level) in
+						treelist := List.filter (fun x -> 
+							(x.number <> tree1.number) && (x.number <> tree2.number)) !treelist;
+						treelist := List.append !treelist (mergedtree::[]);
+				end*)
 			else if (level == 0) then
 				begin
-				print_endline "MERGE_TREE 2";
-				let tree1 = (List.hd !treelist) in
-				let tree2 = (List.hd (List.tl !treelist)) in
+				print_endline "MERGE_TREE2";
+				while (List.length !treelist) > 1 do
+						let treelistrev = List.rev (!treelist) in
+						let tree1 = (List.hd treelistrev) in
+						let tree2 = (List.hd (List.tl treelistrev)) in
+						let newlevel = ref tree1.level in
+						if (tree2.level < tree1.level) then
+							newlevel := tree2.level;
+						let mergedtree = new_tree(App(tree2.structure, tree1.structure), !newlevel-1) in
+						treelist := List.filter (fun x -> 
+							(x.number <> tree1.number) && (x.number <> tree2.number)) !treelist;
+						treelist := List.append !treelist (mergedtree::[]);
+						print_endline "MERGE";
+				(*show_tree mergedtree.structure;
+				print_endline (string_of_int mergedtree.level);*)
+				print_endline "AFFICHAGEMERGE_TREE2";
+				List.iter (fun x -> 
+				show_tree (x.structure);
+				print_endline (string_of_int (x.level));
+				print_endline "";) !treelist;
+			print_endline "END AFFICHAGEMERGE_TREE2"
+				done;
 				
-				let newlevel = ref tree1.level in
-				if (tree2.level < tree1.level) then
-					newlevel := tree2.level;
-				let mergedtree = new_tree(App(tree1.structure, tree2.structure), !newlevel-1) in
-				treelist := List.filter (fun x -> 
-					(x.number <> tree1.number) && (x.number <> tree2.number)) !treelist;
-				print_endline "MERGE";
-				show_tree mergedtree.structure;
-				print_endline (string_of_int mergedtree.level);
-				treelist := mergedtree::[]
+				
+				
+				
 				end
 		end
 	else if ((List.length !globalenv) > 0) && (List.length !treelist) >= 1 then
@@ -442,5 +468,5 @@ let pre_parse s =
 ;; 
 
 let () = 
-	pre_parse (read_line())
-	(*pre_parse ("(lxyz.xz(yz))((lxy.x)(lxyz.xz(yz)))(lxy.x)")*);;
+	(*pre_parse (read_line())*)
+	pre_parse ("(lxyz.xz(yz))((lxyz.x(yz))(lxyz.x(yz))(lxyz.xz(yz)))((lxy.x)(lxy.x))");;
