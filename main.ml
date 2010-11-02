@@ -401,9 +401,14 @@ let pre_parse s =
 let rec rechercheLambda (arbre, l) =
 	match arbre with
 		| App(Lambda(x,y),_) -> (arbre, l@["ici"])
-		| App(x,_) -> rechercheLambda (x, l@["gauche"])
+		| App(x,y) -> (
+										let temp = rechercheLambda (x, l@["gauche"]) in
+										 match temp with
+											| (_, []) -> rechercheLambda(y, l@["droite"])
+											| _ -> temp
+									)
 		| Lambda(x,y) -> rechercheLambda (y, l@["bas"])
-		| _ -> (arbre , l);;
+		| _ -> (arbre , []);;
 
 let rec listLambda arbre =
 	match arbre with
@@ -483,12 +488,13 @@ let rec nouveauNom var listeNoms =
 		| t::q -> (nouveauNom var q)
 		| _ -> var;;
 
-(* Voir les cas ou on a pas "t=gauche" mais pas une liste vide non plus *)
+(* Voir les cas ou on a pas "t=qqchose" mais pas une liste vide non plus *)
 let rec recreeArbreAlphaConv arbreOrigine listeChangement adresseChangement =
 	match arbreOrigine with
 		| App(x,y) -> (match adresseChangement with
 										| t::q when (t = "ici") -> App(((recreeArbreAlphaConv x listeChangement q), y))
 										| t::q when (t = "gauche") -> App((recreeArbreAlphaConv x listeChangement q), y)
+										| t::q when (t = "droite") -> App(x, (recreeArbreAlphaConv y listeChangement q))
 										| _ -> App((recreeArbreAlphaConv x listeChangement adresseChangement), (recreeArbreAlphaConv y listeChangement adresseChangement)) 
 								)
 		| Lambda(c,e) -> (match adresseChangement with
@@ -504,6 +510,7 @@ let rec recreeArbreBetaRed arbreOrigine arbreACopier variableAChanger adresseCha
 		| App(x,y) -> (match adresseChangement with
 										| t::q when (t = "ici") -> recreeArbreBetaRed x arbreACopier variableAChanger q
 										| t::q when (t = "gauche") -> App((recreeArbreBetaRed x arbreACopier variableAChanger q), y)
+										| t::q when (t = "droite") -> App(x, (recreeArbreBetaRed y arbreACopier variableAChanger q))
 										| _ -> App((recreeArbreBetaRed x arbreACopier variableAChanger adresseChangement), (recreeArbreBetaRed y arbreACopier variableAChanger adresseChangement)) 
 								)
 		| Lambda(c,e) -> (match adresseChangement with
