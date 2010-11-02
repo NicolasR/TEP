@@ -247,7 +247,7 @@ let rec search_point string current length =
 	else
 		search_point string (current+1) length
 ;;
-		
+
 (** Fonction de parsing de la chaine
 		@param s: la chaine a parser
 		@param index: l'index actuel
@@ -362,11 +362,27 @@ let rec parse_string s index isLambda length needtobuild =
 						let lambda = String.make 1 s.[index+1] in
 						globalenv := List.append !globalenv ((true,lambda)::[]);
 						parse_string s (index+2) true length false;
+						
 				| '.' ->
-					if (s.[index+1] == '(') then
+					(** BETA TEST **)
+						if (s.[index+1] == '(') then
 						begin
-							correctpar := !correctpar + 1;
-							parse_string s (index+2) false length true
+							let nextparClose = search_par ')' '(' s 0 (index+1) length in
+							let temp1 = String.sub s (index+(nextparClose-1)) ((length)-(index+nextparClose-1)) in
+							let temp1length = String.length temp1 in
+							let rightClosePar = String.sub temp1 1 (temp1length-1) in
+							let leftClosePar = String.sub s 2 (length - (String.length rightClosePar)-3) in
+							(*print_endline ("");
+							print_endline (s);
+							print_endline (temp1);
+							print_endline (temp2);
+							print_endline (temp3);
+							print_endline ("."^temp3^temp2);
+							print_endline (string_of_int (index));
+							print_endline ("");
+							ignoretest := List.append (!ignoretest) (nextparClose::[]);
+							correctpar := !correctpar + 1;*)
+							parse_string ("."^leftClosePar^rightClosePar) (index) false (length-2) true
 						end
 					else
 						parse_string s (index+1) false length true ;
@@ -587,5 +603,6 @@ let () =
 			let test = operation a [a] in
 				print_endline "\n\n\n\n\n RESULTAT \n\n\n\n";
 				afficheResultatOperation test;;
+
 
 
