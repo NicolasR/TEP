@@ -561,11 +561,15 @@ let rec dernierArbre listeArbre =
 
 let rec operation arbre listeArbre =
 			let dA = dernierArbre listeArbre in
-				let nouvelleArbre = (betaRed (alphaConv arbre)) in
-					if(estIdentique nouvelleArbre dA) then
-						listeArbre
+				let nouvelleArbreAlpha = (alphaConv arbre) in
+				let nouvelleArbreBeta = (betaRed nouvelleArbreAlpha) in
+					if(estIdentique nouvelleArbreBeta dA) then
+						if(estIdentique nouvelleArbreAlpha dA) then
+							listeArbre
+						else
+							(listeArbre@[nouvelleArbreAlpha]@[nouvelleArbreBeta])
 					else
-						operation nouvelleArbre (listeArbre@[nouvelleArbre]);;
+						operation nouvelleArbreBeta (listeArbre@[nouvelleArbreAlpha]@[nouvelleArbreBeta]);;
 
 let rec afficheResultatOperation listeArbre =
 	match listeArbre with
