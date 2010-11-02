@@ -216,10 +216,6 @@ let merge_tree level =
 		end
 	else if ((List.length !globalenv) > 0) && (List.length !treelist) >= 1 then
 		begin
-			List.iter (fun x -> 
-				show_tree (x.structure);
-				print_endline (string_of_int (x.level));
-				print_endline "";) !treelist;
 			let listLambda = List.find_all (fun x -> fst(x) = true) !globalenv in
 			let notLambda = List.rev(List.filter (fun x -> fst(x) = false) !globalenv) in
 			let newEnv = List.append listLambda notLambda in
@@ -361,7 +357,6 @@ let rec parse_string s index isLambda length needtobuild =
 						globalenv := List.append !globalenv ((true,lambda)::[]);
 						parse_string s (index+2) true length false;
 				| '.' ->
-					print_endline ".";
 					if (s.[index+1] == '(') then
 						begin
 							correctpar := !correctpar + 1;
