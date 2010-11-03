@@ -1,0 +1,370 @@
+\documentclass[a4paper,11pt,titlepage]{article}
+\usepackage[latin1]{inputenc} %support de l'utf8
+\usepackage[T1]{fontenc} %support des accents
+\usepackage[francais]{babel} %support de la langue
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{float} 
+\usepackage{url}
+\geometry{hscale=0.70,vscale=0.70,centering}
+\usepackage{graphicx}
+
+\setcounter{secnumdepth}{4} % Augmente profondeur 
+\setcounter{tocdepth}{4} % Augmente profondeur table des matieres
+\makeatletter
+\renewcommand{\paragraph}{\@startsection{paragraph}{4}{0ex}%
+   {-3.25ex plus -1ex minus -0.2ex}%
+   {1.5ex plus 0.2ex}%
+   {\normalfont\normalsize\bfseries}}
+\makeatother
+
+\makeatletter
+\def\url@biburlstyle{%
+\@ifundefined{selectfont}{\def\UrlFont{\sf}}{\def\UrlFont{\small\ttfamily}}}
+\makeatother
+
+%\makeatletter
+%\newcounter {subsubsubsection}[subsubsection]
+%\renewcommand\thesubsubsubsection{\thesubsubsection .\@alph\c@subsubsubsection}
+%\newcommand\subsubsubsection{\@startsection{subsubsubsection}{4}{\z@}%
+%                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+%                                     {1.5ex \@plus .2ex}%
+%                                     {\normalfont\normalsize\bfseries}}
+%\renewcommand\paragraph{\@startsection{paragraph}{5}{\z@}%
+%                                    {3.25ex \@plus1ex \@minus.2ex}%
+%                                    {-1em}%
+%                                    {\normalfont\normalsize\bfseries}}
+%\renewcommand\subparagraph{\@startsection{subparagraph}{6}{\parindent}%
+%                          
+
+%                                       {-1em}%
+%                                      {\normalfont\normalsize\bfseries}}
+%\newcommand*\l@subsubsubsection{\@dottedtocline{4}{10.0em}{4.1em}}
+%\renewcommand*\l@paragraph{\@dottedtocline{5}{10em}{5em}}
+%\renewcommand*\l@subparagraph{\@dottedtocline{6}{12em}{6em}}
+%\newcommand*{\subsubsubsectionmark}[1]{}
+%\makeatother
+
+%%\usepackage{hyperref}
+
+%%\makeatletter
+%%\def\toclevel@subsubsubsection{4}
+%%\def\toclevel@paragraph{5}
+%%\def\toclevel@subparagraph{6}
+%%\makeatother
+
+\title{Rapport de Projet TEP\\Une applet d'évaluation des lambda-termes utilisant O'Browser}
+\author{Nicolas RIGNAULT \and Thibault DUPERRON}
+
+\begin{document}
+\renewcommand{\bibname}{}
+\renewcommand{\refname}{}
+\maketitle
+\tableofcontents
+
+\newpage
+\section{Introduction}
+
+\subsection{Présentation du lambda Calcul}
+
+TODO
+
+\subsection{Présentation d'Obrowser}
+
+TODO\footnote{http://www.pps.jussieu.fr/~canou/obrowser/tutorial/}
+\newpage
+
+\section{Présentation des applet d'évaluation déjà existante}
+
+\subsection{PHP}
+
+TODO
+
+\subsection{JAVA}
+
+TODO
+
+\newpage
+\section{Travail effecué}
+
+\subsection{Parsing de l'expression}
+
+TODO
+
+\subsection{Operations sur l'arbre}
+
+\subsubsection{Choix du lambda à evaluer}
+
+Le premier lambda à evaluer est celui qui est le plus à gauche dans l'arbre et dont le père est une Application.
+listeNouveauNoms
+Pour trouver ce sous arbre et sa position dans l'arbre d'origine, la fonction `rechercheLambda` fait un parcours recurcif de l'arbre.
+Pour chaque application, la fonction va regarder si un tel lambda existe dans le sous arbre gauche, si c'est le cas il renvoi le chemin vers ce lambda,
+ sinon il regardera dans le sous arbre droit. Si aucun lambda n'est trouvé alors le chemin renvoyé est une liste vide.
+
+\subsubsection{Alpha Convertion}
+
+L'alpha conversion est fait en 3 étapes:
+\begin{itemize}
+ \item La fonction listLambda permet de lister tout les lambdas communs entre le sous arbre gauche et le sous arbre droit
+ \item La fonction listeNouveauNoms permet de donner pour chaque lambda de créer des couples (nom, nouveauNom) tel que le nouveau
+nom de variable ne soit pas lié.
+ \item La fonction recreeArbreAlphaConv permet de recréer 
+\end{itemize}
+
+
+\subsubsection{Beta Réduction}
+
+Pour r�aliser cette fonctionnalit�, nous nous sommes appuy�s sur les classes d�velopp�es pour l'utilisation du prototype d'indexeur. La mise en oeuvre de cette fonction repose donc sur les quatres classes et interfaces suivantes : 
+\begin{itemize}
+	\item la classe \textit{Indexer}, qui est la classe homonyme du prototype agr�ment�e de quelques m�thodes et �l�ments en plus
+	\item la classe \textit{MarkOccurrences}, qui a pour base la classe \textit{OcamlASTPage} du prototype mais qui s'en �loigne beaucoup
+	\item l'interface \textit{ICallBack}, qui est l'interface du m�me nom du prototype
+	\item la classe \textit{CallBackAdapter}, qui impl�mente l'interface \textit{ICallBack}, qui est elle aussi est la classe homonyme du prototype
+\end{itemize}
+ainsi que sur des extensions du plug-in sur les points d'extensions suivants : 
+\begin{itemize}
+	\item \textit{org.eclipse.core.resources.markers}
+	\item \textit{org.eclipse.ui.editors.annotationTypes}
+	\item \textit{org.eclipse.ui.editors.markerAnnotationSpecification}
+	\item \textit{org.eclipse.ui.actionSets}
+	\item \textit{org.eclipse.ui.commandes}
+\end{itemize}
+\paragraph{\textit{Indexer}} Cette classe assure la communication entre le plugin et l'indexeur.
+
+Elle poss�de un attribut du type ExecHelper qui execute un processus externe et permet une communication interactive avec ce processus. De plus la classe \textit{Indexer} impl�mente l'interface \textit{IExecEvents} qui fournit un m�canisme de rappel afin de pouvoir obtenir les entr�es du processus au moment o� elles surviennent. Ces deux �lements assurent la liaison avec l'indexeur et permettent l'envoi de commandes et la r�ception de flux XML.\\
+
+L'envoi de la demande des diff�rentes occurrences d'une variable se fait gr�ce � la m�thode \textit{getAstOccVarFromInput}, qui prend deux arguments de types String, deux arguments de type int et enfin un argument de type ICallBack. La m�thode envoie � l'indexeur :
+ \begin{itemize}
+ 	\item la commande \textit{astOccVarFromInput}
+	\item le premier argument de type String, qui correspond � l'ensemble du contenu du fichier ouvert dans l'�diteur dans lequel la recherche des occurrences doit se faire (ce contenu est envoy� ligne par ligne)
+	\item le second argument de type String, qui constitue le nom de la variable recherch�e.
+	\item le premier argument de type int, qui repr�sente l'offset de d�but de la variable dans le fichier
+	\item et le second argument de type int, qui repr�sente l'offset de fin de la variable dans le fichier
+\end{itemize}
+Le dernier argument, qui est affect� � l'attribut \textit{callback} de la classe, est une instance d'une classe impl�mentant l'interface ICallBack et qui d�finit la m�thode \textit{receiveAstOccVar} de l'interface. C'est cette m�thode qui devra �tre appel�e � la r�ception de la r�ponse de l'indexeur.\\
+
+Il existe une seconde commande de demande des occurrences qui est \textit{astOccVarFromFile} qui comprends les m�me arguments que la commande \textit{astOccVarFromInput} sauf en ce qui concerne le contenu du fichier. En effet, cette commande envoie seulement le chemin du fichier au lieu d'envoyer l'ensemble des lignes du fichier � l'indexeur.\\
+
+Concernant l'envoie des informations entre l'indexeur et le plug-in, nous avions deux solutions. Soit envoyer l'emplacement du fichier � l'indexeur et il se chargera ensuite de le parser. Soit envoyer le contenu du fichier, ligne par ligne, � l'indexeur.
+Chacune de ses solutions a ses avantages et ses inconv�nients. 
+
+La premi�re solution n�cessite que le fichier soit enregistr� pour que l'indexeur dispose des derni�res informations, cependant il n'est pas n�cessaire d'envoyer les lignes. 
+
+La seconde solution permet de r�cuperer toute modification, m�me non enregistr�e. Cependant, il faut envoyer le contenu du fichier � l`indexeur.
+
+Nous avons choisis la seconde solution car elle nous semble plus adapt�e � un editeur du type OcaIDE. En effet, on souhaite pouvoir communiquer avec l'indexeur sans pour autant devoir sans cesse enregistrer son fichier source.
+%Nous avons choisi d'utiliser l'envoi du fichier entier afin de pouvoir notamment ex�cuter cette fonction sur un fichier en cours de modification ce qui �tait impossible avec l'autre commande. Et ????\\
+
+La r�ception du flux XML envoy� par l'indexeur se fait dans la m�thode \textit{processNewInput}, qui est une m�thode h�rit�e de l'interface IExecEvents impl�ment�e par la classe. Le flux re�u est ensuite envoy� � la m�thode \textit{receiveAstOccVar} de l'attribut \textit{callback} afin d'ex�cuter les actions pr�vues lors de l'envoi de la commande.
+
+\paragraph{\textit{MarkOccurrences}} Cette classe, qui impl�mente les interfaces \textit{ICursorPositionListener} et \textit{IDocumentListener}, permet de recevoir les modifications apport�es au fichier en cours d'�dition, ainsi que les changements de position du curseur dans l'�diteur. 
+
+Ces informations permettent notammnent de demander � l'indexeur l'arbre de syntaxe du programme ouvert dans l'�diteur, en particulier � l'ouverture d'un nouveau fichier ou � chaque modification du fichier, ou encore les occurrences de la variable point�e par le curseur au moment pr�sent.\\
+
+\`A chaque modification du document ouvert dans l'�diteur, la m�thode \textit{update} de la classe est appel�e. Celle-ci fait appelle � la m�thode \textit{getXMLAstFromInput} de la classe \textit{Indexer} qui envoie � l'indexeur la commande demandant l'arbre de syntaxe Caml du programme. Le flux XML contenant cet AST renvoy� par l'indexeur est ensuite pars� gr�ce � la m�thode \textit{parseXML} et est ensuite stock� afin qu'il puisse �tre utilis�.\\
+
+\`A chaque changement de position du curseur dans l'�diteur, la m�thode \textit{cursorPositionChanged}, d�finie dans l'interface \textit{ICursorPositionListener}, est appel�e. La position du curseur est pass�e en param�tre de cette m�thode et est donc utilisable afin de trouver les informations relatives � la variable point�e. En effet, � partir de l'AST du programme pr�c�demment r�cup�r� et de la position du curseur, on peut retrouver l'�l�ment pr�sent � cette position et donc son nom si c'est une variable et ses offsets de d�but et de fin � l'aide de la m�thode \textit{getElementAtOffset}. 
+
+Une fois ces informations trouv�es, la m�thode \textit{getAstOccVarFromInput} de la classe \textit{Indexer} est appel�e avec les arguments ad�quats. Le dernier argument �tant une nouvelle instance de la classe \textit{CallBackAdapter} dont on d�finit la m�thode \textit{receiveAstOccVar}. Cette m�thode est impl�ment�e de telle sorte qu'� la r�ception du flux XML, envoy� par l'indexeur via la classe \textit{Indexer}, celui-ci soit pars� afin de r�cup�rer chacune des occurrences et ses informations propres (ses offsets de d�but et de fin et si elle est en lecture ou en �criture) afin de placer, au bon endroit sur le document, un \textit{Marker} repr�sentant l'annotation de type \textit{Occurrences} ou  \textit{WriteOccurrences}.
+
+Cependant, les offsets renvoy�s par l'indexer ne peuvent pas toujours �tre utilis�s directement. En effet, sous Windows, les fichiers texte poss�dent � la fin de chaque ligne les caract�res '$\backslash$r$\backslash$n' qui correspondent � un CR-LF\footnote{Carriage Return Line Feed qui correspond � deux caract�res de fin de ligne qui sont CR (Return) et LF (New Line)}. Cependant, avec des syst�mes bas�s sur Unix, les caract�res de fin de ligne sont seulement des '$\backslash$r', � savoir des CR.  
+%mais pas ceux cr��s sous les syst�mes compatibles avec Linux (c'est-�-dire Linux et Mac OS), 
+Or Eclipse ne semble pas comptabiliser ces caract�res dans le calcul des offsets. Il faut donc recalculer chacun des offsets donn�s en fonction du syt�me sous lequel le fichier a �t� cr�� et celui sous lequel il est pr�sentement ouvert afin de faire correspondre les offsets donn�s par Camlp4 et ceux donn�s par Eclipse.
+
+\paragraph{Les \textit{Markers}} Afin de donner un apsect visuel aux \textit{Markers}, de nouvelles extensions dans le fichier \textit{plugin.xml} ont �t� rajout�es. 
+
+Tout d'abord,  une nouvelle extension du point \textit{org.eclipse.core.resources.markers} a �t� faite afin de d�clarer le nouveau \textit{Marker} d'occurrence \textit{ocamlOccurrencesMarker}. 
+
+Ensuite, le point \textit{org.eclipse.ui.editors.annotationTypes} a �t� �tendu afin de d�clarer les deux nouvaux \textit{types d'Annotation} de ce \textit{Marker} : \textit{ocamlOccurrencesAnnotationType} et \textit{ocamlWriteOccurrencesAnnotationType}. 
+
+Par la suite, ces deux \textit{types d'Annotation} ont �t� sp�cif�es � l'aide du point d'extension \textit{org.eclipse.ui.editors.markerAnnotationSpecification}. 
+
+Pour finir, des extensions ont �t� faites aux points \textit{org.eclipse.ui.actionSets} et \\\textit{org.eclipse.ui.commandes} afin de rajouter dans le menu \textit{Ocaml} dans Eclipse une entr�e pour activer/d�sactiver le marquage des occurrences.\\
+
+\newpage
+\subsubsection{Du c�t� de l'indexeur}
+
+Afin de pouvoir impl�menter cette fonctionnalit� du c�t� de l'indexeur, nous devions comprendre le langage O'Caml et les principales structures qui le composent afin de pouvoir faire correspondre les diff�rentes d�clarations. Nous avons donc regroup�s les diff�rentes structures qu'il est important de conna�tre.\\
+
+
+\paragraph{Les d�clarations}
+
+Camlp4 ayant �t� choisit pour r�aliser l'indexeur, le d�veloppement s'est donc fait � partir d'un prototype d'indexeur qui existait d�j�. Ce prototype disposait d'une fonction qui renvoyait un flux XML comportant tous les �l�ments pr�sents dans le fichier source cible. Ce flux �tait ensuite renvoy� vers le plugin qui �tait ensuite capable de l'afficher dans une vue d'�clipse.\\
+
+Le fonctionnement de cette fonction est le suivant: � partir de l'AST r�cup�r� gr�ce � Camlp4, chaque �lement du fichier source est pars� et analys� pour r�cup�rer toutes les informations n�cessaires telles que le nom de l'�lement et sa position. Viennent ensuite d'autres cas o� l'on r�cup�re plus d'informations comme les d�clarations de fonctions o� l'on souhaite savoir si elles sont r�cursives ou encore la d�claration d'enregistrement o� l'on veut savoir si les �lements peuvent �tre r�affect�s (dit mutable en Caml). \\
+
+L'id�e est donc de partir de cette fonction afin de r�aliser les fonction demand�es. Ici, on souhaite seulement r�cup�rer les informations concernant une variable pr�cise. Il faut donc v�rifier si l'on ne rencontre pas une d�claration portant le m�me nom que celle pass�e en param�tre. Si oui, il faut la r�cup�rer et la stocker pour pouvoir la renvoyer au plugin.
+
+Lorsque l'on rencontre un �l�ment qui ne fait pas partie des mots cl�s du langage Caml (autrement dit, un identifiant), ce dernier est identifi� comme �tant un constructeur appel� ``IdLid'' qui correspond � un identifiant dont la premi�re lettre est une minuscule, ou encore comme ``IdUid, qui correspond � un identifiant dont la premi�re lettre est une majuscule. Par convention\footnote{http://caml.inria.fr/resources/doc/guides/guidelines.fr.html}, les d�clarations de variables doivent commencer par une minuscule. Les majuscules sont r�serv�es aux noms de module et aux constructeurs. C'est donc ici que doit se faire la v�rification du nom par rapport � celui pass� en param�tre ainsi que le stockage de la variable si cela s'av�re n�cessaire.\\
+
+Bien que le fait de reconna�tre une variable puisse sembler simple, il faut �galement pouvoir faire correspondre cette m�me variable avec toutes les occurrences se trouvant dans le fichier. Cette op�ration peut s'av�rer difficile, surtout � cause de certaines syntaxes permises par le langage O'Caml. En effet, en O'Caml, il est tout � fait possible d'�crire ceci:
+
+\begin{figure}[H]
+\centering
+ \begin{lstlisting}
+ let ab = 1
+ let ab = 
+   (let ab = 2 in ab*2) + ab;;
+ \end{lstlisting}
+\caption{Exemple O'Caml avec variables qui portent le m�me nom}
+ \label{caml1}
+\end{figure}
+
+
+Dans cet exemple, toutes les d�clarations portent le m�me nom. Il faut donc �galement conna�tre la port�e de la variable pour pouvoir faire correspondre celles qui ont le m�me nom et qui ont la m�me port�e. En reprenant cet exemple et en marquant les d�clarations ayant la m�me port�e, on obtient ceci:
+
+ \begin{figure}[H]
+	
+  \begin{tabbing}
+  le\=t \textcolor{red}{ab} = 1\\
+  le\=t ab =\\ 
+    \>(let \textcolor{green}{ab} = 2 in \textcolor{green}{ab} * 2) + \textcolor{red}{ab};;
+  \end{tabbing}
+  \caption{Exemple O'Caml avec variables color�s qui portent le m�me nom}
+  \label{caml2}
+ \end{figure}
+
+~\newline
+Il faut donc identifier les d�claration globales mais aussi les d�clarations locales et faire correspondre la port�e de la variable donn�e en param�tre et ne garder que les variables ayant cette m�me port�e. De m�me, une variable se trouvant dans une d�claration locale (et donc d�clar�e dans ce bloc) ne peut avoir la m�me port�e qu'une autre variable dans une autre d�claration globale que celle o� elle se trouve. Cependant, une variable d�clar�e globalement peut tout � fait �tre utilis�e dans une autre d�claration si elle n'est pas elle m�me remplac�e par une d�claration locale comme dans l'exemple \ref{caml1}.\\
+
+
+\paragraph{Les modules}
+
+Les noms des modules doivent commencer par une majuscule (toujours par convention). Il sont donc identifi�s comme �tant des ''IdUid``. Il faut r�cup�rer le nom du module et associer toutes les d�clarations � l'int�rieur comme faisant partie du module. Il faut aussi pouvoir identifier tout appel � une variable de ce module tout en permettant � ce m�me module d'utiliser une d�claration globale comme dans l'exemple suivant:
+
+\begin{figure}[H]
+ \begin{lstlisting}
+ let ab = 7
+
+module A = struct
+  let ab = ab
+  let c = ab
+end
+
+module B = struct
+  let ab = 3 + ab
+  let ab = A.c
+end
+let test = ab
+ \end{lstlisting}
+ \caption{Exemple O'Caml avec deux modules}
+ \label{caml3}
+\end{figure}
+
+
+Ici, la variable ''test = ab`` fait bien appel au ''ab`` dont la valeur est 7. De m�me, ''A.ab`` fait �galement appel � la variable ''ab`` dont la valeur est 7.
+
+
+\paragraph{Les enregistrements}
+Un enregistrement permet de stocker diff�rentes variables, que l'on peut r�affecter pour peu que l'on ait d�clar� cette variable comme mutable. Tout appel � une variable contenue dans un enregistrement se fait de la mani�re suivante:
+\begin{center}
+ nom\_de\_l'enregistrement.nom\_de\_la\_variable
+\end{center}
+
+Cependant, contrairement aux modules, le nom de l'enregistrement doit commencer par une minuscule. Ainsi, un nom d'enregistrement est consid�r� comme �tant un constructeur de type ''IdLid``. Toutefois, deux enregistrements de noms diff�rents ne peuvent contenir deux variables du m�me nom.
+
+\paragraph{Les classes}
+
+Le fonctionnement des classes est similaire � celui des modules, � quelques diff�rences pr�s. La principale diff�rence �tant que le nom d'une classe doit commencer par une minuscule et est donc identifi� comme �tant un constructeur de type ''IdLid``. Tout appel � une m�thode de la classe se fait donc de la mani�re suivante: \begin{center}
+nom\_de\_la\_classe.nom\_de\_la\_methode\\                                                                            \end{center}
+
+Il faut donc pouvoir distinguer les appels de classes des simples noms de variables. Il faut aussi pouvoir distinguer les variables et les m�thodes de diff�rentes classes car contrairement aux enregistrements, deux classes de noms diff�rents peuvent avoir les m�mes variables et les m�mes m�thodes. Enfin, il faut pouvoir identifier les variables qui sont des instances de la classes. Il faut donc faire remonter l'information lorsque l'on rencontre le mot cl� ''new`` (identifi� comme constructeur ExNew par Camlp4).
+\newpage
+
+
+\subsection{R�cup�ration des d�clarations globales et locales}
+
+\subsubsection{Objectif}
+
+Le but de cette fonction est de r�cup�rer toutes les d�clarations globales et locales contenues dans le fichier source afin d'am�liorer et d'acc�lerer l'Outline\footnote{Vue d'eclipse qui permet un acc�s rapide aux d�clarations globales et locales}.
+Il s'agit donc de r�cup�rer:
+\begin{itemize}
+	\item Les d�clarations de fonctions et de variables (let nom parametre1 ... =)
+	\item Les modules (d�clarations, utilisations)
+	\item Les enregistrements
+	\item Les classes
+\end{itemize}
+
+L'indexeur doit donc r�cup�rer toutes ces informations et les renvoyer au plugin qui doit ensuite se charger de les synchroniser avec l'Outline.
+
+
+\subsubsection{Protocole de communication}
+
+Le protocole choisit pour assure la communication entre le plugin et l'indexeur est le suivant:
+
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+ \hline
+ XML & Description \\
+ \hline
+ $<$declarations$>$ & \\... & Balises qui d�marrent le flux xml\\</declaration>  & \\
+ \hline
+ $<$class nom=''string`` loc=''string``$>$ & \\
+ $<$val ismutable=''bool`` name=''string`` loc=''string`` $/>$ & D�claration d'une classe\\
+ $<$method name=''string`` loc=''string``$>$ & \\
+ $<$param name=''string`` loc=''string`` $/>$ & \\
+ $</$method$>$ & \\
+ $</$class$>$ & \\
+ \hline
+ $<$let name=''string`` loc=''string``$>$ & \\
+ $<$param name=''string`` loc=''string`` $/>$ & D�claration d'un let global et d'un let local\\
+ $<$letin name=''string`` loc=''string``$>$ & \\... & \\$</$ letin$>$ &\\
+ $</$let$>$ &\\
+ \hline
+ $<$module name=''string`` loc=''string``$>$ &\\... & D�claration d'un module\\$</$ module$>$ &\\
+ \hline
+ $<$enr name=''string`` loc=''string``$>$ & \\
+ $<$val name=''string`` type=''string loc=``string''$>$ & D�claration d'un enregistrement\\
+ $</$enr$>$ & \\
+ \hline
+\end{tabular}
+\end{center}
+
+\newpage
+
+\subsubsection{Du c�t� du plug-in}
+
+\subsubsection{Du c�t� de l'indexeur}
+
+L'id�e est la m�me que pour la fonction pr�cedente sauf qu'ici on ne souhaite pas conna�tre la port�e des diff�rentes d�clarations. Il s'agit donc de parcourir l'AST en renvoyant les informations rencontr�es.\\
+
+Les constructeurs concern�es par ce raffinement sont les suivants:
+\begin{itemize}
+ \item ``StCls'' pour une d�claration de classe
+ \item ``CgVal'' pour une d�claration d'attribut de classe
+ \item ``CgVal'' pour une d�claration de m�thode
+ \item ``StVal'' pour une d�claration globale de fonction
+ \item ``ExLet'' pour une d�claration locale d'un ``let''
+ \item ``StMod'' pour une d�claration de module
+ \item ``StTyp'' pour une d�claration d'enregistrement
+ \item ``TyCol'' pour une d�claration de variable dans un enregistrement\\
+\end{itemize}
+
+Il s'agit donc d'un raffinement de la fonction d'origine du prototype d'indexeur car on souhaite renvoyer seulement certains informations. La principale difficult� est de pouvoir faire remonter les offsets des noms de d�clarations. En effet, on souhaite pouvoir mettre en valeur le nom de la d�claration uniquement. Or, les offsets correspondants sont donn�s dans les constructeurs des identifiants de type ``IdLid'' et ``IdUid''.
+
+\newpage
+\subsection{Probl�mes rencontr�s}
+
+L'un des grands probl�mes fut la compr�hension du sujet. En effet, il a fallu plusieurs r�union pour que nous comprenions le travail qui nous �tait demand�.\\
+
+De plus, n'ayant jamais cr�e de plug-in avec eclipse, il nous a fallu nous documenter pour comprendre les diff�rents m�canisme mais aussi le fonctionnement du plug-in existant. De m�me, nous d�couvrons O'Caml cette ann�e. La syntaxe de ce langage de programmation nous a donc pos� quelques probl�mes d'interpr�tation. Lors de la programmation de la premi�re fonctionnalit�, pour r�cup�rer les port�es des diff�rentes variables, il nous est arriv� plusieurs fois de mal interpr�ter les syntaxes lorsque plusieurs d�clarations portent le nom (voir page \pageref{caml1}).\\
+
+Enfin, nous ne sommes pas parvenus � r�soudre certains probl�mes. Du c�t� de l'indexeur, il semblerait que Camlp4 se borne � vouloir renvoyer les offsets d'une ligne compl�te dans le cas des enregistrements ainsi que des d�clarations se trouvant � l'int�rieur des classes, ce qui emp�che ensuite de pouvoir afficher les variables ayant la m�me port�e (si on effectue la s�lection � partir de la classe ou de l'enregistrement). On obtient donc des affichages comme celui-ci: [EXEMPLE]
+
+\newpage
+\subsection{Captures d'�crans}
+
+\newpage
+\subsection{Bibliographie}
+
+\begin{flushleft}
+ \bibliographystyle{plain}
+ \bibliography{biblio}
+ \nocite{*}
+\end{flushleft}
+
+
+
+
+\end{document}
