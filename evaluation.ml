@@ -5,11 +5,11 @@ open Graphics;;
 open Operation;;
 open Parsingstr;;
 
-(** Liste des Ã©tapes sous forme d'arbres**)
+(** Liste des étapes sous forme d'arbres*)
 let steplist = ref [];;
 
-(** Recuperation des differentes etapes de la chaine s
-		@param s, la chaine a parser **)
+(** Récupération des différentes étapes de la chaine s
+		@param s, la chaine à parser *)
 let getSteps s =
 	treelist := [];
 	let a = (pre_parse (s)) in
@@ -17,32 +17,32 @@ let getSteps s =
 	steplist := test
 ;;
 
-(** Couleur des lignes de l'arbre **)
+(** Couleur des lignes de l'arbre *)
 let linecolor = black;;
 
-(** Couleur de fond: gris **)
+(** Couleur de fond: gris *)
 let grey = (Graphics.rgb 220 220 220);;
 
-(** Couleur du titre: fuchsia **)
+(** Couleur du titre: fuchsia *)
 let fucshia = "rgb(202,44,146)";;
 
-(** Couleur des '^' dans l'arbre: orange **)
+(** Couleur des '^' dans l'arbre: orange *)
 let orange = (Graphics.rgb 255 140 0)
 
-(** Exception indiquant la fin de la liste **)
+(** Exception indiquant la fin de la liste *)
 exception EndList;;
 
-(** Indique le numero de l'arbre consulte **)
+(** Indique le numero de l'arbre consulte *)
 let currentstep = ref 0;;
 
-(** Indique si un graphe a deja ete dessine **)
+(** Indique si un graphe a deja ete dessine *)
 let isGraph = ref false;;
 
 (** Retourne le ieme arbre de la liste
-		@param index, index Ã  retourner
-		@param listtree, la liste Ã  parcourir
+		@param index, index à retourner
+		@param listtree, la liste à parcourir
 		@return int
-**)
+*)
 let rec find_tree index listtree =
 	try
 		if (index == 1) then
@@ -53,12 +53,12 @@ let rec find_tree index listtree =
 		| _ -> 
 			raise EndList;;
 
-(** Dessine aux coordonnÃ©es x, y, de taille width l'element t 
+(** Dessine aux coordonnées x, y, de taille width l'element t 
 		@param x, entier
 		@param y, entier
 		@param width, entier
 		@param t, arbre
-**)
+*)
 let rec draw x y width t =
 	match t with
 		| Var(var) -> 
@@ -73,20 +73,20 @@ let rec draw x y width t =
 			draw_son abs (y-15) abs (y - 40) (width / 2) b;
 			draw_label abs (y-20) "^" orange
 
-(** Dessine le fils d'un arbre Lambda aux coordonnees specifiees **)
+(** Dessine le fils d'un arbre Lambda aux coordonnees spécifiées *)
 and draw_son_lambda x0 y0 x1 y1 width t =
 			set_color red;
 			moveto x0 y0;
 			draw x0 y0 width t
 
-(** Dessine le fils d'un arbre non Lambda **)
+(** Dessine le fils d'un arbre non Lambda *)
 and draw_son x0 y0 x1 y1 width t =
 			set_color linecolor;
 			moveto x0 y0;
 			lineto (x1 + width / 2) y1;
 			draw x1 y1 width t
 
-(** Dessine un lambda **)
+(** Dessine un lambda *)
 and draw_lambda x y value color =
 	set_color color;
 	moveto x y;
@@ -95,7 +95,7 @@ and draw_lambda x y value color =
 	moveto x y;
 	lineto x (y-25);
 
-(** Ecrit un label (texte d'un noeud) **)
+(** Ecrit un label (texte d'un noeud) *)
 and draw_label x y value color =
 	let (width, height) = text_size value in
 	let abs = x - width / 2 in
@@ -103,24 +103,24 @@ and draw_label x y value color =
 	moveto abs y;
 	draw_string value;;
 
-(** Dessine l'arbre t **)
+(** Dessine l'arbre t *)
 let draw_tree t =
 		draw 0 (size_y() - 20) (size_x()) t;;
 
-(** Le corps du document html **)
+(** Le corps du document html *)
 let body = get_element_by_id "body";;
 
-(** La hauteur du graphe **)
+(** La hauteur du graphe *)
 let height = ref 800;;
 
-(** La largeur du graphe **)
+(** La largeur du graphe *)
 let width = ref 600;;
 
 (** Construit un champ de type input HTML pour la saisie de texte 
 		@param name, le nom du champ
 		@param valuen la valeur
 		@return element
-**)
+*)
 let string_input name value =
 	let input = Js.Node.element "input" in
   Js.Node.set_attribute input "type" "text" ;
@@ -129,8 +129,8 @@ input;;
 
 (** Construit un bouton HTML 
 		@param name, nom du bouton
-		@param callback, fonction Ã  appeler
-**)
+		@param callback, fonction à appeler
+*)
 let button name callback =
   let input = Js.Node.element "input" in
   Js.Node.set_attribute input "type" "submit" ;
@@ -140,7 +140,7 @@ input;;
 
 (** Construit un element div HTML 
 		@param id, l'id du DIV
-**)
+*)
 let div id =
   let div = Js.Node.element "div" in
   Js.Node.set_attribute div "id" id ;
@@ -148,7 +148,7 @@ div;;
 
 (** Dessine le graphe de l'arbre associe
 		@param tree, l'arbre a dessiner
-**)
+*)
 let draw_graph tree =
 	set_color grey;
 	fill_rect 0 0 !height !width;
@@ -163,7 +163,7 @@ let show_string tree isEnd =
 		text := "Reduction finale: "^(string_of_tree tree true true);
 	Node.append div (Node.text !text);;
 
-(** Affiche l'etape precedente de la reduction **)
+(** Affiche l'étape precedente de la reduction *)
 let rec prev () =
 		currentstep := !currentstep-1;
 		let tree = find_tree (!currentstep) (!steplist) in
@@ -178,7 +178,7 @@ let rec prev () =
 			Node.set_attribute (get_element_by_id "previousbutton") "style" ""
 ;;
 
-(** Affiche l'etape suivante de la reduction **)
+(** Affiche l'étape suivante de la reduction *)
 let rec reduce () =
 	try
 		currentstep := !currentstep+1;
@@ -198,7 +198,7 @@ let rec reduce () =
 			show_string tree true;
 			end;;
 
-(** Fonction appelee lors de la premiere reduction **)
+(** Fonction appelée lors de la premiere reduction *)
 let rec firstreduce () =
 	steplist := [];
 	try
@@ -223,7 +223,7 @@ let rec firstreduce () =
 			set_color grey;
 			clear_graph();;
 
-(** Fonction principale **)
+(** Fonction principale *)
 let () = 
 
 	let upperdiv = Html.div ~style:"id: upper; padding: 5px; text-align: center;" [] in
@@ -242,10 +242,10 @@ let () =
 	let inputstring = string_input "Expression" "" in
 	Js.Node.set_attribute inputstring "id" "expression" ;	
 
-	Node.append body ((Html.h1 ~style:"text-align: center; color: rgb(202,44,146);" [Html.string "Visualisation de la rÃ©duction de Lambda-termes"]));
+	Node.append body ((Html.h1 ~style:"text-align: center; color: rgb(202,44,146);" [Html.string "Visualisation de la réduction de Lambda-termes"]));
 	Node.append body (upperdiv);
 	Node.append (get_element_by_id "upper") (inputstring);
-	Node.append (get_element_by_id "upper") (button "RÃ©duire"
+	Node.append (get_element_by_id "upper") (button "Réduire"
 	(fun () ->
 			firstreduce ();
 	));
@@ -254,7 +254,7 @@ let () =
 	Node.append body (stringdiv);
 	Node.append body (commanddiv);
 
-	let previous = (button "PrÃ©cÃ©dent"
+	let previous = (button "Précédent"
 		(fun () ->
 				prev ();		
 		)) in

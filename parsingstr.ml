@@ -1,7 +1,7 @@
 open Operation;;
 
 
-(** Exception indiquant qu'il manque des parenthèses dans l'expression **)
+(** Exception indiquant qu'il manque des parenthèses dans l'expression *)
 exception BadPar;;
 
 let listeCharUtil = ["a";"b";"c";"d";"e";"f";"g";"h";"i";"j";"k";"m";"n";"o";"p";"q";"r";"s";"t";"u";"v";"w";"x";"y";"z"]
@@ -14,17 +14,17 @@ type term =
 | App of term * term
 *)
 
-(** Numero unique associe a un arbre. Incremente a chaque creation *)
+(** Numero unique associé à un arbre. Incremente a chaque creation *)
 let treenum = ref 0;;
 
-(** Enregistrement correspondant a un arbre *)
+(** Enregistrement correspondant à un arbre *)
 type tree = {
   level : int;
   number: int;
 	structure: term;
 };;
 
-(** Creation d'un nouvel arbre
+(** Création d'un nouvel arbre
     @param s: la structure de l'arbre
     @param l: le niveau de l'arbre par rapport au parenthesage
     @return arbre
@@ -37,7 +37,7 @@ let new_tree (s, l) =
 	structure = s;
 }
 
-(** Contient la liste des variables lambda rencontree pendant le parsing *)
+(** Contient la liste des variables lambda rencontrées pendant le parsing *)
 let lambdalist = ref [];;
 
 (** Niveau de parenthésage en cours **)
@@ -46,10 +46,10 @@ let parlevel = ref 0;;
 (** Contient les variables de l'environnement *)
 let globalenv = ref [];;
 
-(** Liste les differents arbres manipules pendant le parsing. Contiendra l'unique arbre final a la fin du parsing *)
+(** Liste les différents arbres manipulés pendant le parsing. Contiendra l'unique arbre final à la fin du parsing *)
 let treelist = ref [];;
 
-(** Corrections eventuelles quand au niveau de parenthesage *)
+(** Corrections eventuelles quand au niveau de parenthésage *)
 let correctpar = ref 0;;
 
 (** Imprime la chaine en fonction de l'arbre passe en parametre
@@ -87,7 +87,7 @@ let rec print_tree tree isLambda isFirstLambda =
 			end
 ;;
 
-(** Renvoie une chaine en fonction de l'arbre passe en parametre
+(** Renvoie une chaine en fonction de l'arbre passe en paramètre
     @param tree: l'arbre dont on souhaite obtenir la chaine
     @param isLambda: indique si la variable en cours est un lambda
 		@param isFirstLambda: indique si c'est le premier lambda que l'on rencontre
@@ -165,7 +165,7 @@ let rec build_tree level =
 ;;
 
 (** Affiche un arbre (Fonction de Debug)
-		@param tree: l'arbre a afficher
+		@param tree: l'arbre à afficher
 *)
 let rec show_tree tree =
 	match tree with
@@ -295,7 +295,7 @@ let rec search_point string current length =
 ;;
 
 (** Fonction de parsing de la chaine
-		@param s: la chaine a parser
+		@param s: la chaine à parser
 		@param index: l'index actuel
 		@param isLambda: indique si le caractere actuel est un lambda
 		@param length: longueur de la chaine
@@ -410,7 +410,6 @@ let rec parse_string s index isLambda length needtobuild =
 						parse_string s (index+2) true length false;
 						
 				| '.' ->
-					(** BETA TEST **)
 						if (s.[index+1] == '(') then
 						begin
 							let nextparClose = search_par ')' '(' s 0 (index+1) length in

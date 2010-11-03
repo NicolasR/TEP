@@ -23,7 +23,7 @@ operation.cmo: operation.ml
 #Génère la doc
 doc: operation.ml parsingstr.ml evaluation.ml
 	mkdir doc
-	ocamldoc -I $$(ocamlopt -where)/threads js.ml operation.ml parsingstr.ml evaluation.ml -html -o Projet -d doc
+	ocamldoc -I $(OBROWSER)/rt/caml js.ml operation.ml parsingstr.ml evaluation.ml -html -o Projet -d doc
 
 #Supprime les fichiers compilés
 clean:

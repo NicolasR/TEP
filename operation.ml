@@ -1,3 +1,6 @@
+(** Gere les operations d'alpha conversion et de beta reduction *)
+
+(** Exception indiquant que l'expression n'est pas correcte *)
 exception BadExpression;;
 
 (** Definie la composition d'un arbre pour le lambda calcul *)
