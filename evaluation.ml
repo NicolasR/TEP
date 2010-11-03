@@ -91,7 +91,6 @@ and draw_label x y value color =
 	let (width, height) = text_size value in
 	let abs = x - width / 2 in
 	set_color color;
-	(*fill_rect (abs - 2) (y - 2) (width + 4) (height + 4);*)
 	moveto abs y;
 	draw_string value;;
 
@@ -147,9 +146,13 @@ let draw_graph tree =
 	draw_tree tree;;
 
 
-let show_string tree =
-	(** RECUPERER CHAINE **)
-	Node.append (get_element_by_id "string") (Node.text "lx.x");;
+let show_string tree isEnd =
+	let div = (get_element_by_id "string") in
+	Node.empty div;
+	let text = ref ("Expression en cours: "^(string_of_tree tree true true)) in
+	if (isEnd) then
+		text := "Reduction finale: "^(string_of_tree tree true true);
+	Node.append div (Node.text !text);;
 
 (** Affiche l'etape precedente de la reduction **)
 let rec prev () =
@@ -158,7 +161,7 @@ let rec prev () =
 		set_color (Graphics.rgb 220 220 220);
 		clear_graph ();
 		draw_tree tree;
-		show_string tree;
+		show_string tree false;
 		Node.set_attribute (get_element_by_id "nextbutton") "style" "";
 		if (!currentstep == 1) then
 			Node.set_attribute (get_element_by_id "previousbutton") "style" "display: none"
@@ -174,15 +177,16 @@ let rec reduce () =
 		set_color (Graphics.rgb 220 220 220);
 		clear_graph ();
 		draw_tree tree;
-		show_string tree;
+		show_string tree false;
 		let previous = (get_element_by_id "previousbutton") in
 		Node.set_attribute previous "style" "";
 	with
 		| EndList ->
 			begin
+				let tree = find_tree (!currentstep-1) (!steplist) in
 				let next = (get_element_by_id "nextbutton") in
-				Node.set_attribute next "style" "display: none"
-			(** UPDATE STRING **)
+				Node.set_attribute next "style" "display: none";
+			show_string tree true;
 			end;;
 
 (** Fonction appelee lors de la premiere reduction **)
@@ -204,6 +208,7 @@ let rec firstreduce () =
 		Node.set_attribute (get_element_by_id "previousbutton") "style" "display: none";
 		currentstep := 1;
 		draw_graph tree;
+		show_string tree false;
 	with
 		| _ -> ();;
 
@@ -225,13 +230,14 @@ let () =
 
 	let inputstring = string_input "Expression" "" in
 	Js.Node.set_attribute inputstring "id" "expression" ;	
+
+	Node.append body ((Html.h1 ~style:"text-align: center; color: rgb(202,44,146);" [Html.string "Visualisation de la réduction de Lambda-termes"]));
 	Node.append body (upperdiv);
 	Node.append (get_element_by_id "upper") (inputstring);
 	Node.append (get_element_by_id "upper") (button "Réduire"
 	(fun () ->
 			firstreduce ();
 	));
-
 	Node.append body (Js.Node.element "br");
 	Node.append body (reductiondiv);
 	Node.append body (Js.Node.element "br");

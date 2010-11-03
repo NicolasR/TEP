@@ -87,6 +87,47 @@ let rec print_tree tree isLambda isFirstLambda =
 			end
 ;;
 
+(** Renvoie une chaine en fonction de l'arbre passe en parametre
+    @param tree: l'arbre dont on souhaite obtenir la chaine
+    @param isLambda: indique si la variable en cours est un lambda
+		@param isFirstLambda: indique si c'est le premier lambda que l'on rencontre
+*)
+let rec string_of_tree tree isLambda isFirstLambda =
+	match tree with
+		| Var(x) ->
+			x;
+		| App(x, y) ->
+			let s = ref "" in
+			if (not(isFirstLambda)) then
+				s := !s^"(";
+			s := !s^(string_of_tree x isLambda isFirstLambda);
+			s:= !s^(string_of_tree y isLambda isFirstLambda);
+			if (not(isFirstLambda)) then
+				s := !s^")";
+				!s;
+		| Lambda(x,y) ->
+			begin
+			let s = ref "" in
+			if (isFirstLambda) then
+				begin
+					s := !s^"(l";
+				end;
+				begin
+				match y with
+
+					| Lambda(_,_) ->
+						s := !s^x;
+						s := !s^(string_of_tree y true false);
+					| _ ->
+						s := !s^x;
+						s := !s^".";
+						s := !s^(string_of_tree y false false);
+				end;
+				s := !s^")";
+				!s;
+			end
+;;
+
 (** Construit un arbre en fonction des variables de l'environnement.
 		@param level: niveau actuel *)
 let rec build_tree level = 
