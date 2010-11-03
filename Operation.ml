@@ -1,6 +1,6 @@
-exception EpicFail;;
+exception BadExpression;;
 
-
+(** Definie la composition d'un arbre pour le lambda calcul *)
 type term =
 | Var of string
 | Lambda of string * term
@@ -170,7 +170,7 @@ let listeChangement arbre =
 													listeSAD := (enleveDouble (listLambda y) []);
 													listeNouveauNoms (listeCommun !listeSAG !listeSAD) ((listVar x)@(listVar y)) listeCharUtil
 												end
-					| _ -> Printf.printf("Erreur betareduction");
+					| _ -> 
 								[];;
 
 (** Renvoi le nouveau nom correspondant a la variable var dans listeNoms
@@ -250,7 +250,6 @@ let betaRed arbre =
 let alphaConv arbre =
 	let appPremierLambda = rechercheLambda (arbre, []) in
 		let listeChangeAFaire = listeChangement (fst(appPremierLambda)) in
-			afficheListeChangement listeChangeAFaire;
 			recreeArbreAlphaConv arbre listeChangeAFaire (snd(appPremierLambda));;
 
 
@@ -278,7 +277,7 @@ let rec dernierArbre listeArbre =
 	match listeArbre with
 		| t::[] -> t
 		| t::q -> dernierArbre q
-		| [] -> raise EpicFail;;
+		| [] -> raise BadExpression;;
 
 (** renvoi la liste des conversions/reductions d'un arbre
 		@param arbre: arbre a réduire
@@ -299,12 +298,3 @@ let rec operation arbre listeArbre =
 							operation nouvelleArbreBeta (listeArbre@[nouvelleArbreBeta])
 						else
 						operation nouvelleArbreBeta (listeArbre@[nouvelleArbreAlpha]@[nouvelleArbreBeta]);;
-
-
-
-let () =
-		let a = App(App(Lambda("x", Lambda("y", Lambda("z", App(App(Var("x"),Var("z")),App(Var("y"),Var("z")))))), Lambda("x", Lambda("y", Var("x")))), Lambda("x", Lambda("y", Var("x")))) in
-			let test = operation a [a] in
-				print_endline "\n\n\n\n\n RESULTAT \n\n\n\n";
-				afficheResultatOperation test;
-				print_endline "FIN DU PROGRAMME";;
