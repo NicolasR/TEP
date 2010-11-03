@@ -11,14 +11,23 @@ let steplist = ref [];;
 (** Recuperation des differentes etapes de la chaine s
 		@param s, la chaine a parser **)
 let getSteps s =
+	treelist := [];
 	let a = (pre_parse (s)) in
 	let test = operation a [a] in
-	steplist := test;
-	treelist := []
+	steplist := test
 ;;
 
 (** Couleur des lignes de l'arbre **)
 let linecolor = black;;
+
+(** Couleur de fond: gris **)
+let grey = (Graphics.rgb 220 220 220);;
+
+(** Couleur du titre: fuchsia **)
+let fucshia = "rgb(202,44,146)";;
+
+(** Couleur des '^' dans l'arbre: orange **)
+let orange = (Graphics.rgb 255 140 0)
 
 (** Exception indiquant la fin de la liste **)
 exception EndList;;
@@ -62,7 +71,7 @@ let rec draw x y width t =
 			let abs = x + width / 2 in
 			draw_son abs (y-15) x (y - 40) (width / 2) a;
 			draw_son abs (y-15) abs (y - 40) (width / 2) b;
-			draw_label abs (y-20) "^" (Graphics.rgb 255 140 0)
+			draw_label abs (y-20) "^" orange
 
 (** Dessine le fils d'un arbre Lambda aux coordonnees specifiees **)
 and draw_son_lambda x0 y0 x1 y1 width t =
@@ -141,7 +150,7 @@ div;;
 		@param tree, l'arbre a dessiner
 **)
 let draw_graph tree =
-	set_color (Graphics.rgb 220 220 220);
+	set_color grey;
 	fill_rect 0 0 !height !width;
 	draw_tree tree;;
 
@@ -158,7 +167,7 @@ let show_string tree isEnd =
 let rec prev () =
 		currentstep := !currentstep-1;
 		let tree = find_tree (!currentstep) (!steplist) in
-		set_color (Graphics.rgb 220 220 220);
+		set_color grey;
 		clear_graph ();
 		draw_tree tree;
 		show_string tree false;
@@ -174,7 +183,7 @@ let rec reduce () =
 	try
 		currentstep := !currentstep+1;
 		let tree = find_tree (!currentstep) (!steplist) in
-		set_color (Graphics.rgb 220 220 220);
+		set_color grey;
 		clear_graph ();
 		draw_tree tree;
 		show_string tree false;
@@ -210,21 +219,23 @@ let rec firstreduce () =
 		draw_graph tree;
 		show_string tree false;
 	with
-		| _ -> ();;
+		| _ -> 
+			set_color grey;
+			clear_graph();;
 
 (** Fonction principale **)
 let () = 
 
-	let upperdiv = Html.div ~style:"id: test; padding: 5px; text-align: center;" [] in
+	let upperdiv = Html.div ~style:"id: upper; padding: 5px; text-align: center;" [] in
 	Js.Node.set_attribute upperdiv "id" "upper" ;
 
-	let reductiondiv = Html.div ~style:"id: test; padding: 5px; text-align: center;" [] in
+	let reductiondiv = Html.div ~style:"id: reduction; padding: 5px; text-align: center;" [] in
 	Js.Node.set_attribute reductiondiv "id" "reduction" ;
 
-	let stringdiv = Html.div ~style:"id: test; padding: 5px; text-align: center;" [] in
+	let stringdiv = Html.div ~style:"id: string; padding: 5px; text-align: center;" [] in
 	Js.Node.set_attribute stringdiv "id" "string" ;
 
-	let commanddiv = Html.div ~style:"id: test; padding: 5px; text-align: center;" [] in
+	let commanddiv = Html.div ~style:"id: command; padding: 5px; text-align: center;" [] in
 	Js.Node.set_attribute commanddiv "id" "command" ;
 
 
@@ -240,9 +251,7 @@ let () =
 	));
 	Node.append body (Js.Node.element "br");
 	Node.append body (reductiondiv);
-	Node.append body (Js.Node.element "br");
 	Node.append body (stringdiv);
-	Node.append body (Js.Node.element "br");
 	Node.append body (commanddiv);
 
 	let previous = (button "Précédent"

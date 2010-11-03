@@ -122,8 +122,8 @@ let rec string_of_tree tree isLambda isFirstLambda =
 						s := !s^x;
 						s := !s^".";
 						s := !s^(string_of_tree y false false);
+						s := !s^")";
 				end;
-				s := !s^")";
 				!s;
 			end
 ;;
