@@ -1,3 +1,5 @@
+(** Gère le parsing de la chaîne et renvoie l'arbre correspondant *)
+
 open Operation;;
 
 
@@ -190,7 +192,7 @@ let rec show_tree tree =
 		@param current: index de parcours de la chaine
 		@param length: longueur de la chaine
 		@return entier
-**)
+*)
 let rec search_par first second string level current length =
 	if (current = length) then
 		-1
