@@ -409,7 +409,7 @@ let pre_parse s =
 	parse s (String.length s)
 ;;
 
-let () =
+(*let () =
 	let a = (pre_parse (read_line())) in
 		print_endline "*** Arbre en entree ***";
 		show_tree a;
@@ -417,7 +417,7 @@ let () =
 		
 		let test = operation a [a] in
 			print_endline "*** RESULTAT ***";
-			afficheResultatOperation test;
+			afficheResultatOperation test;*)
 
 
 
