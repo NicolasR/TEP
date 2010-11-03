@@ -4,8 +4,6 @@ open Operation;;
 (** Exception indiquant qu'il manque des parenthèses dans l'expression *)
 exception BadPar;;
 
-let listeCharUtil = ["a";"b";"c";"d";"e";"f";"g";"h";"i";"j";"k";"m";"n";"o";"p";"q";"r";"s";"t";"u";"v";"w";"x";"y";"z"]
-
 (** Definie la composition d'un arbre pour le lambda calcul *)
 (*
 type term =
@@ -48,9 +46,6 @@ let globalenv = ref [];;
 
 (** Liste les différents arbres manipulés pendant le parsing. Contiendra l'unique arbre final à la fin du parsing *)
 let treelist = ref [];;
-
-(** Corrections eventuelles quand au niveau de parenthésage *)
-let correctpar = ref 0;;
 
 (** Imprime la chaine en fonction de l'arbre passe en parametre
     @param tree: l'arbre dont on souhaite obtenir la chaine
@@ -446,6 +441,10 @@ let parse s length =
 ;;
 
 let pre_parse s = 
+	treelist := [];
+	parlevel := 0;
+	globalenv := [];
+	lambdalist := [];
 	parse s (String.length s)
 ;;
 

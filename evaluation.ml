@@ -5,16 +5,17 @@ open Graphics;;
 open Operation;;
 open Parsingstr;;
 
-(** Liste des étapes sous forme d'arbres*)
+(** Liste des Ã©tapes sous forme d'arbres*)
 let steplist = ref [];;
 
-(** Récupération des différentes étapes de la chaine s
-		@param s, la chaine à parser *)
+(** RÃ©cupÃ©ration des diffÃ©rentes Ã©tapes de la chaine s
+		@param s, la chaine Ã  parser *)
 let getSteps s =
 	treelist := [];
 	let a = (pre_parse (s)) in
+			
 	let test = operation a [a] in
-	steplist := test
+	steplist := test;
 ;;
 
 (** Couleur des lignes de l'arbre *)
@@ -39,8 +40,8 @@ let currentstep = ref 0;;
 let isGraph = ref false;;
 
 (** Retourne le ieme arbre de la liste
-		@param index, index à retourner
-		@param listtree, la liste à parcourir
+		@param index, index Ã  retourner
+		@param listtree, la liste Ã  parcourir
 		@return int
 *)
 let rec find_tree index listtree =
@@ -53,7 +54,7 @@ let rec find_tree index listtree =
 		| _ -> 
 			raise EndList;;
 
-(** Dessine aux coordonnées x, y, de taille width l'element t 
+(** Dessine aux coordonnÃ©es x, y, de taille width l'element t 
 		@param x, entier
 		@param y, entier
 		@param width, entier
@@ -73,7 +74,7 @@ let rec draw x y width t =
 			draw_son abs (y-15) abs (y - 40) (width / 2) b;
 			draw_label abs (y-20) "^" orange
 
-(** Dessine le fils d'un arbre Lambda aux coordonnees spécifiées *)
+(** Dessine le fils d'un arbre Lambda aux coordonnees spÃ©cifiÃ©es *)
 and draw_son_lambda x0 y0 x1 y1 width t =
 			set_color red;
 			moveto x0 y0;
@@ -129,7 +130,7 @@ input;;
 
 (** Construit un bouton HTML 
 		@param name, nom du bouton
-		@param callback, fonction à appeler
+		@param callback, fonction Ã  appeler
 *)
 let button name callback =
   let input = Js.Node.element "input" in
@@ -163,7 +164,7 @@ let show_string tree isEnd =
 		text := "Reduction finale: "^(string_of_tree tree true true);
 	Node.append div (Node.text !text);;
 
-(** Affiche l'étape precedente de la reduction *)
+(** Affiche l'Ã©tape precedente de la reduction *)
 let rec prev () =
 		currentstep := !currentstep-1;
 		let tree = find_tree (!currentstep) (!steplist) in
@@ -178,7 +179,7 @@ let rec prev () =
 			Node.set_attribute (get_element_by_id "previousbutton") "style" ""
 ;;
 
-(** Affiche l'étape suivante de la reduction *)
+(** Affiche l'Ã©tape suivante de la reduction *)
 let rec reduce () =
 	try
 		currentstep := !currentstep+1;
@@ -198,13 +199,14 @@ let rec reduce () =
 			show_string tree true;
 			end;;
 
-(** Fonction appelée lors de la premiere reduction *)
+(** Fonction appelÃ©e lors de la premiere reduction *)
 let rec firstreduce () =
 	steplist := [];
 	try
 		let s = (get_element_by_id "expression") >>> get "value" >>> as_string in
 		getSteps s;
 		let tree = List.hd !steplist in
+		
 		if (!isGraph) then
 				clear_graph ()
 		else
@@ -238,14 +240,16 @@ let () =
 	let commanddiv = Html.div ~style:"id: command; padding: 5px; text-align: center;" [] in
 	Js.Node.set_attribute commanddiv "id" "command" ;
 
+	let suggestdiv = Html.div ~style:"id: suggest; padding: 5px; text-align: center;" [] in
+	Js.Node.set_attribute suggestdiv "id" "suggest" ;
 
 	let inputstring = string_input "Expression" "" in
 	Js.Node.set_attribute inputstring "id" "expression" ;	
 
-	Node.append body ((Html.h1 ~style:"text-align: center; color: rgb(202,44,146);" [Html.string "Visualisation de la réduction de Lambda-termes"]));
+	Node.append body ((Html.h1 ~style:"text-align: center; color: rgb(202,44,146);" [Html.string "Visualisation de la rÃ©duction de Lambda-termes"]));
 	Node.append body (upperdiv);
 	Node.append (get_element_by_id "upper") (inputstring);
-	Node.append (get_element_by_id "upper") (button "Réduire"
+	Node.append (get_element_by_id "upper") (button "RÃ©duire"
 	(fun () ->
 			firstreduce ();
 	));
@@ -253,8 +257,9 @@ let () =
 	Node.append body (reductiondiv);
 	Node.append body (stringdiv);
 	Node.append body (commanddiv);
+	Node.append body (suggestdiv);
 
-	let previous = (button "Précédent"
+	let previous = (button "PrÃ©cÃ©dent"
 		(fun () ->
 				prev ();		
 		)) in
@@ -268,5 +273,12 @@ let () =
 
 	Node.set_attribute next "id" "nextbutton";
 	Node.set_attribute next "style" "display: none";
-	Node.append (get_element_by_id "command") next;;
+	Node.append (get_element_by_id "command") next;
+	
+	Node.append suggestdiv (Html.div ~style:"text-decoration: underline; padding: 5px;" [Html.string "Exemples:"]);
+	Node.append suggestdiv (Html.div ~style:"padding: 5px;" [Html.string "delta A : (lx.xx)(lxy.xy)"]);
+	Node.append suggestdiv (Html.div ~style:"padding: 5px;" [Html.string "SKK : (lxyz.xz(yz))(lxy.x)(lxy.x)"]);
+	Node.append suggestdiv (Html.div ~style:"padding: 5px;" [Html.string "S(KS)K : lxyz.xz(yz))((lxy.x)(lxyz.xz(yz)))(lxy.x)"]);
+	Node.append suggestdiv (Html.div ~style:"padding: 5px;" [Html.string "delta delta : (lx.xx)(lx.xx)"]);
+	Node.append suggestdiv (Html.div ~style:"padding: 5px;" [Html.string "S(BBS)(KK) : (lxyz.xz(yz))((lxyz.(x(yz)))(lxyz.(x(yz)))(lxyz.xz(yz)))((lxy.x)(lxy.x))"]);;
 
