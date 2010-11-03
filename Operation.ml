@@ -301,10 +301,10 @@ let rec operation arbre listeArbre =
 						operation nouvelleArbreBeta (listeArbre@[nouvelleArbreAlpha]@[nouvelleArbreBeta]);;
 
 
-
+(*
 let () =
 		let a = App(App(Lambda("x", Lambda("y", Lambda("z", App(App(Var("x"),Var("z")),App(Var("y"),Var("z")))))), Lambda("x", Lambda("y", Var("x")))), Lambda("x", Lambda("y", Var("x")))) in
 			let test = operation a [a] in
 				print_endline "\n\n\n\n\n RESULTAT \n\n\n\n";
 				afficheResultatOperation test;
-				print_endline "FIN DU PROGRAMME";;
+				print_endline "FIN DU PROGRAMME";;*)
