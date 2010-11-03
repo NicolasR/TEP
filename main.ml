@@ -594,15 +594,21 @@ let rec afficheResultatOperation listeArbre =
 							afficheResultatOperation q
 		| [] -> print_endline "\nFin  affichage listeArbre";;
 
+let final = ref [];;
+
 let () =
-	let a = (pre_parse (read_line ())) in
+	let a = (pre_parse ("(lx.x)")) in
 		print_endline "\n\n\n     arbre en entrée \n\n\n";
 		show_tree a;
 		print_endline "\n\n";
 		
+		try
 			let test = operation a [a] in
 				print_endline "\n\n\n\n\n RESULTAT \n\n\n\n";
-				afficheResultatOperation test;;
+				afficheResultatOperation test;
+				final := test;
+		with
+			| _ -> print_endline "COUCOU"
 
 
 
