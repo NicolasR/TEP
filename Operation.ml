@@ -28,64 +28,19 @@ let rec show_tree tree =
 			print_string ")"
 			;;
 
-let rec rechercheLambda (arbre, l) =
-	match arbre with
-		| App(Lambda(x,y),_) -> (arbre, l@["ici"])
-		| App(x,_) -> rechercheLambda (x, l@["gauche"])
-		| Lambda(x,y) -> rechercheLambda (y, l@["bas"])
-		| _ -> (arbre , l);;
+(** Affiche les arbres d'une liste d'arbre
+		@param listeArbre: liste d'arbre a afficher
+*)	
+let rec afficheResultatOperation listeArbre =
+	match listeArbre with
+		| t::q -> show_tree t;
+							print_endline "";
+							afficheResultatOperation q
+		| [] -> print_endline "\nFin  affichage listeArbre";;
 
-let rec listLambda arbre =
-	match arbre with
-		| App(x,y) -> (listLambda x)@(listLambda y)
-		| Lambda(x,y) -> (listLambda y)@[x]
-		| _ -> [];;
-
-let rec listVar arbre =
-	match arbre with
-		| App(x,y) -> (listVar x)@(listVar y)
-		| Lambda(x,y) -> (listVar y)@[x]
-		| Var(x) -> [x];;
-
-let rec estDansListe elem l =
-	match l with
-		| t::q when (t = elem) -> true;
-		| t::q -> estDansListe elem q
-		| _ -> false;;
-
-let rec enleveDouble listeATrier listeTrier =
-	match listeATrier with
-		| t::q -> if (estDansListe t listeTrier) then
-								enleveDouble q listeTrier
-							else
-								enleveDouble q (listeTrier@[t]);
-		| _ -> listeTrier;;
-							
-let rec afficheListe liste =
-	match liste with
-		| t::q -> begin
-								print_endline t;
-								afficheListe q;
-							end
-		| [] -> Printf.printf("Fin de l'affichage \n");;
-
-(* Renvoi la liste des elements en commun entre l1 et l2 *)
-let rec listeCommun l1 l2 =
-		match l1 with
-			| t::q when (estDansListe t l2) -> [t]@(listeCommun q l2)
-			| t::q -> listeCommun q l2
-			| _ -> [];;
-
-(* Voir envoi exception *)
-let rec listeNouveauNoms listeAChanger listeAEviter listeChar =
-	match listeAChanger with
-		| t::q when (estDansListe t listeAEviter) -> (match listeChar with
-																									| c::r when (estDansListe c listeAEviter) -> listeNouveauNoms listeAChanger listeAEviter r
-																									| c::r -> [(t,c)]@(listeNouveauNoms q (listeAEviter@[c]) listeCharUtil)
-																									| _ -> [])
-		| t::q -> [(t,t)]@(listeNouveauNoms q listeAEviter listeCharUtil)
-		| _ -> [];;
-	
+(** Affiche une liste de couple (string, string) 
+		@param l: liste a afficher
+*)	
 let rec afficheListeChangement l =
 	match l with
 		| (x,y)::q -> print_string "Changement ";
@@ -94,7 +49,118 @@ let rec afficheListeChangement l =
 									print_endline y;
 									afficheListeChangement q
 		| _ -> print_endline "Fin de l'affichage de afficheListeChangement";;	
-	
+
+(** Affiche une liste de string
+		@param liste: liste à afficher
+*)						
+let rec afficheListe liste =
+	match liste with
+		| t::q -> begin
+								print_endline t;
+								afficheListe q;
+							end
+		| [] -> Printf.printf("Fin de l'affichage \n");;
+
+
+
+
+(** Fonction qui donne le chemin d'accès et l'abre de l'App la plus a gauche dans 
+		l'arbre de la lambda expression qui contient un lambda en sous arbre gauche
+		@param arbre: arbre a parcourir
+		@param l: liste du chemin parcourus
+		@return (term, string list)
+*)
+let rec rechercheLambda (arbre, l) =
+	match arbre with
+		| App(Lambda(x,y),_) -> (arbre, l@["ici"])
+		| App(x,y) -> (
+										let temp = rechercheLambda (x, l@["gauche"]) in
+										 match temp with
+											| (_, []) -> rechercheLambda(y, l@["droite"])
+											| _ -> temp
+									)
+		| Lambda(x,y) -> rechercheLambda (y, l@["bas"])
+		| _ -> (arbre , []);;
+
+(** Fonction qui renvoie la liste de tout les lambdas d'un arbre
+		@param arbre: arbre
+		@return string list
+*)
+let rec listLambda arbre =
+	match arbre with
+		| App(x,y) -> (listLambda x)@(listLambda y)
+		| Lambda(x,y) -> (listLambda y)@[x]
+		| _ -> [];;
+
+(** Fonction qui renvoie la liste de tout les variables d'un arbre
+		@param arbre: string list
+		@return 
+*)
+let rec listVar arbre =
+	match arbre with
+		| App(x,y) -> (listVar x)@(listVar y)
+		| Lambda(x,y) -> (listVar y)@[x]
+		| Var(x) -> [x];;
+
+(** Fonction qui renvoie vrai si l'element elem est dans la liste l
+		@param elem: element a rechercher
+		@param l: liste
+		@return  bool
+*)
+let rec estDansListe elem l =
+	match l with
+		| t::q when (t = elem) -> true;
+		| t::q -> estDansListe elem q
+		| _ -> false;;
+
+(**  -> 
+		@param listeATrier: liste a trier
+		@param listeTrier: liste contenant la liste trier (vide a l'initialisation)
+		@return  string list
+*)
+let rec enleveDouble listeATrier listeTrier =
+	match listeATrier with
+		| t::q -> if (estDansListe t listeTrier) then
+								enleveDouble q listeTrier
+							else
+								enleveDouble q (listeTrier@[t]);
+		| _ -> listeTrier;;
+
+
+(* Renvoi la liste des elements en commun entre l1 et l2 *)
+(** Renvoi la liste des elements en commun entre l1 et l2
+		@param l1: liste a trier
+		@param l2: liste contenant la liste trier (vide a l'initialisation)
+		@return  string list
+*)
+let rec listeCommun l1 l2 =
+		match l1 with
+			| t::q when (estDansListe t l2) -> [t]@(listeCommun q l2)
+			| t::q -> listeCommun q l2
+			| _ -> [];;
+
+(* Voir envoi exception *)
+(** Renvoi la liste de couple (nom,nouveauNom) 
+		@param listeAChanger: liste des noms de variables a modifier
+		@param listeAEviter: liste des noms de variables a ne pas utiliser
+		@param listeChar: liste des Char utilisables
+		@return  (string,string) list
+*)
+let rec listeNouveauNoms listeAChanger listeAEviter listeChar =
+	match listeAChanger with
+		| t::q when (estDansListe t listeAEviter) -> (match listeChar with
+																									| c::r when (estDansListe c listeAEviter) -> listeNouveauNoms listeAChanger listeAEviter r
+																									| c::r -> [(t,c)]@(listeNouveauNoms q (listeAEviter@[c]) listeCharUtil)
+																									| _ -> [])
+		| t::q -> [(t,t)]@(listeNouveauNoms q listeAEviter listeCharUtil)
+		| _ -> [];;
+
+
+
+(** Renvoi la liste des changement à faire a partir d'un arbre
+		@param arbre: arbre a parcourir
+		@return  (string,string) list
+*)
 let listeChangement arbre =
 		let listeSAG = ref [] in
 			let listeSAD = ref [] in
@@ -107,6 +173,11 @@ let listeChangement arbre =
 					| _ -> Printf.printf("Erreur betareduction");
 								[];;
 
+(** Renvoi le nouveau nom correspondant a la variable var dans listeNoms
+		@param var: variable recherché
+		@param listeNoms: liste de couple (string,string)
+		@return  string
+*)
 let rec nouveauNom var listeNoms =
 	match listeNoms with
 		| (x,y)::q when x = var -> y
@@ -114,11 +185,18 @@ let rec nouveauNom var listeNoms =
 		| _ -> var;;
 
 (* Voir les cas ou on a pas "t=gauche" mais pas une liste vide non plus *)
+(** Recrée un arbre en faisant une alpha conversion
+		@param arbreOrigine: arbre d'origine
+		@param listeChangement: liste des changement a faire
+		@param adresseChangement: adresse du changement
+		@return  term
+*)
 let rec recreeArbreAlphaConv arbreOrigine listeChangement adresseChangement =
 	match arbreOrigine with
 		| App(x,y) -> (match adresseChangement with
 										| t::q when (t = "ici") -> App(((recreeArbreAlphaConv x listeChangement q), y))
 										| t::q when (t = "gauche") -> App((recreeArbreAlphaConv x listeChangement q), y)
+										| t::q when (t = "droite") -> App(x, (recreeArbreAlphaConv y listeChangement q))
 										| _ -> App((recreeArbreAlphaConv x listeChangement adresseChangement), (recreeArbreAlphaConv y listeChangement adresseChangement)) 
 								)
 		| Lambda(c,e) -> (match adresseChangement with
@@ -128,12 +206,19 @@ let rec recreeArbreAlphaConv arbreOrigine listeChangement adresseChangement =
 		| Var(x) -> (match adresseChangement with
 									| t::q -> Var(x)
 									| _ -> Var((nouveauNom x listeChangement)));;
-							
+
+(** Recrée un arbre en faisant une Beta reduction
+		@param arbreOrigine: arbre d'origine
+		@param arbreACopier: arbre à copier lors de la reduction
+		@param variableAChanger: variable a remplacer par arbreACopier
+		@return  term
+*)												
 let rec recreeArbreBetaRed arbreOrigine arbreACopier variableAChanger adresseChangement =
 	match arbreOrigine with
 		| App(x,y) -> (match adresseChangement with
 										| t::q when (t = "ici") -> recreeArbreBetaRed x arbreACopier variableAChanger q
 										| t::q when (t = "gauche") -> App((recreeArbreBetaRed x arbreACopier variableAChanger q), y)
+										| t::q when (t = "droite") -> App(x, (recreeArbreBetaRed y arbreACopier variableAChanger q))
 										| _ -> App((recreeArbreBetaRed x arbreACopier variableAChanger adresseChangement), (recreeArbreBetaRed y arbreACopier variableAChanger adresseChangement)) 
 								)
 		| Lambda(c,e) -> (match adresseChangement with
@@ -146,16 +231,22 @@ let rec recreeArbreBetaRed arbreOrigine arbreACopier variableAChanger adresseCha
 		| Var(x) when (x = variableAChanger) -> (match adresseChangement with
 																							| t::q -> Var(x)
 																							| _ -> arbreACopier)
-		| _ -> arbreOrigine;;						
-																																																																						
+		| _ -> arbreOrigine;;										
+
+(** Fait la beta reduction de l'arbre
+		@param arbre: arbre a réduire
+		@return  term
+*)																																																																																																																																														
 let betaRed arbre =
 	let appPremierLambda = rechercheLambda (arbre, []) in
 		match fst(appPremierLambda) with
 			| App(Lambda(c,e),y) -> recreeArbreBetaRed arbre y c (snd(appPremierLambda))
-			| _ -> print_endline "ERREUR";
-						 arbre ;;
+			| _ -> arbre ;;
 													
-															
+(** Fait l'alpha conversion reduction de l'arbre
+		@param arbre: arbre a réduire
+		@return  term
+*)																
 let alphaConv arbre =
 	let appPremierLambda = rechercheLambda (arbre, []) in
 		let listeChangeAFaire = listeChangement (fst(appPremierLambda)) in
@@ -163,7 +254,11 @@ let alphaConv arbre =
 			recreeArbreAlphaConv arbre listeChangeAFaire (snd(appPremierLambda));;
 
 
-
+(** Test si deux arbres sont identiques
+		@param arbre1: arbre
+		@param arbre2: arbre
+		@return  term
+*)	
 let rec estIdentique arbre1 arbre2 =
 	match arbre1 with
 		| App(x,y) -> (match arbre2 with
@@ -175,90 +270,41 @@ let rec estIdentique arbre1 arbre2 =
 		| Var(x) -> (match arbre2 with
 									| Var(x2) when (x = x2) -> true
 									| _ -> false);; 
-
+(** Renvoi le dernière arbre d'une liste d'arbre
+		@param listeArbre: liste d'arbre
+		@return  term
+*)	
 let rec dernierArbre listeArbre =
 	match listeArbre with
 		| t::[] -> t
 		| t::q -> dernierArbre q
 		| [] -> raise EpicFail;;
 
+(** renvoi la liste des conversions/reductions d'un arbre
+		@param arbre: arbre a réduire
+		@param listeArbre: liste des conversions/reductions
+		@return  term list
+*)	
 let rec operation arbre listeArbre =
-	
-(*	print_endline (read_line()); *)
-(*
-	print_endline "\nDEBUT OPERATION : ";
-	print_endline "\n arbre : ";
-	show_tree arbre;
-	print_endline "";
-	*)
 			let dA = dernierArbre listeArbre in
-				let nouvelleArbre = (betaRed (alphaConv arbre)) in
-					(*
-					print_endline "\n\n\n nouveau \n\n";
-					show_tree nouvelleArbre;
-					print_endline "\n";
-					*)
-					if(estIdentique nouvelleArbre dA) then
-						(print_endline "estIdentique";
-						listeArbre)
+				let nouvelleArbreAlpha = (alphaConv arbre) in
+				let nouvelleArbreBeta = (betaRed nouvelleArbreAlpha) in
+					if(estIdentique nouvelleArbreBeta dA) then
+						if(estIdentique nouvelleArbreAlpha dA) then
+							listeArbre
+						else
+							(listeArbre@[nouvelleArbreAlpha]@[nouvelleArbreBeta])
 					else
-						operation nouvelleArbre (listeArbre@[nouvelleArbre]);;
+						if(estIdentique nouvelleArbreAlpha dA) then
+							operation nouvelleArbreBeta (listeArbre@[nouvelleArbreBeta])
+						else
+						operation nouvelleArbreBeta (listeArbre@[nouvelleArbreAlpha]@[nouvelleArbreBeta]);;
 
-let rec afficheResultatOperation listeArbre =
-	match listeArbre with
-		| t::q -> show_tree t;
-							print_endline "";
-							afficheResultatOperation q
-		| [] -> print_endline "\nFin  affichage listeArbre";;
+
 
 let () =
 		let a = App(App(Lambda("x", Lambda("y", Lambda("z", App(App(Var("x"),Var("z")),App(Var("y"),Var("z")))))), Lambda("x", Lambda("y", Var("x")))), Lambda("x", Lambda("y", Var("x")))) in
 			let test = operation a [a] in
 				print_endline "\n\n\n\n\n RESULTAT \n\n\n\n";
-				afficheResultatOperation test;;
-	
-	(* delta A
-	let a = (App(Lambda("x", App(Var("x"),Var("x"))), Lambda("x", Lambda("y", App(Var("x"), Var("y")))))) in
-			let test = operation a [a] in
-				print_endline "\n\n\n\n\n RESULTAT \n\n\n\n";
-				afficheResultatOperation test;;
-	*)
-
-	(* 	let a = (App(Lambda("x", App(Var("x"),Var("x"))), Lambda("x", Lambda("y", App(Var("x"), Var("y")))))) in
-			let test = operation a [] in
-				print_endline "\n\n\n\n\n               RESULTAT \n\n\n\n";
-				afficheResultatOperation test;;
-	*)
-	
-		(*	let a = App(Lambda("x",Lambda("y",App(Var("x"), Var("y")))), Lambda("x",Lambda("y",App(Var("x"), Var("y"))))) in
-			let alpha = (alphaConv a) in
-				let beta = (betaRed alpha) in
-					print_endline "ALPHA";
-					show_tree alpha;
-					print_endline "\nBETA";
-					show_tree beta;
-					print_endline "";
-					*)
-		(* *)
-			
-			
-			
-			(*print_endline "Arbre avant";
-			show_tree a;
-			print_endline "";
-			let b = alphaConv a in
-				print_endline "Arbre apres";
-				show_tree b;
-				print_endline "";
-				let c = betaRed a in
-					print_endline "Arbre apres bis";
-					show_tree c;
-					print_endline "";
-					let d = alphaConv a in
-						print_endline (string_of_bool (estIdentique b d));
-						print_endline "";
-						
-						print_endline (string_of_bool (estIdentique b c));
-						print_endline "";*)
-			
+				afficheResultatOperation test;
 				print_endline "FIN DU PROGRAMME";;
