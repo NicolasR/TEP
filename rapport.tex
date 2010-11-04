@@ -86,9 +86,14 @@ OBrowser\footnote{http://www.pps.jussieu.fr/~canou/obrowser/tutorial/} est un in
 utilisées dans les programmes Ocaml.
 
 \subsubsection{Tutoriel}
-Voici un exemple d'utilisation de OBrowser:\\
+Les sources de OBrowser contiennent déjà certains exemples permettant de comprendre son fonctionnement. Voici un exemple supplémentaire de quelques outils de base.\\
 
 On souhaite créer un champ de saisie de texte et un bouton. Un clique sur le bouton entrainerait l'affichage du contenu du champ de saisie de texte. On a donc besoin d'un bouton, d'un champ de saisie de texte et eventuellement d'un emplacement où ecrire le texte (par exemple une balise div).
+
+Pour créer une balise, on dispose de ``Html.div''. Pour le bouton, on a ``Js.Node.element "input"''. Enfin on utilise un ``Node.text'' pour afficher une chaîne.\\
+
+Le code correspondant à cet exemple se trouve en Annexe (Voir page \pageref{tutoObrowser}).
+
 
 \subsection{Lambda-calcul}
 
@@ -115,7 +120,7 @@ type term =
 \end{tabular}
 \end{center}
 \caption{Type Term pour représenter les arbres pour le Lambda-calcul}
- \label{tree1}
+ \label{term}
 \end{figure}
 Ainsi, d'après ce type ``Term'' on souhaite donc obtenir un arbre. Ce dernier pourrait ainsi être facilement analysé pour pour pouvoir appliquer les fonctions nécessaires.
 \\
@@ -266,5 +271,89 @@ droit.
   Pour compiler le projet, il faut commencer par compiler les sources de obrowser en se rendant dans son répertoire (un Makefile est présent). Il reste ensuite à compiler les sources du projet (ici aussi un Makefile existe).\\
 
   Pour que le programme soit exécuté avec la page Html, il faut que la machine virtuelle soit présente. C'est déjà le cas dans notre archive mais elle peut être recompilée avec les sources obrowser.
+
+\section{Annexes}
+  \label{tutoObrowser}
+  Code correspondant au tutoriel OBrowser:
+  \begin{center}
+  \begin{tabular}{c}
+
+ \begin{lstlisting}
+open Js ;; (* Necessaire *)
+open Html ;; (* Necessaire si manipulation Html *)
+open JSOO;; (* Necessaire pour la recuperation du contenu du bouton *)
+
+(** Construit un champ de type input HTML pour la saisie de texte 
+  @param name, le nom du champ
+  @param value la valeur
+  @return element
+*)
+let string_input name value =
+  let input = Js.Node.element "input" in
+  Js.Node.set_attribute input "type" "text" ;
+  Js.Node.set_attribute input "value" value ;
+  Js.Node.set_attribute input "style" value ;
+input;;
+
+(** Construit un bouton HTML 
+  @param name, nom du bouton
+  @param callback, fonction a appeler
+*)
+let button name callback =
+  let input = Js.Node.element "input" in
+  Js.Node.set_attribute input "type" "submit" ;
+  Js.Node.set_attribute input "value" name ;
+  Js.Node.register_event input "onclick" callback ();
+input;;
+
+(** Construit un element div HTML 
+  @param id, l'id du DIV
+*)
+let div id =
+  let div = Js.Node.element "div" in
+  Js.Node.set_attribute div "id" id ;
+div;;
+
+(** Affiche le texte dans le div *)
+let print () =
+  let s = (get_element_by_id "text") >>> get "value" >>> as_string in
+  let stringdiv = (get_element_by_id "string") in
+  Node.empty stringdiv;
+  Node.append stringdiv (Node.text s)
+;;
+ \end{lstlisting}
+
+\end{tabular}
+\end{center}
+\newpage
+
+  \begin{center}
+  \begin{tabular}{c}
+
+ \begin{lstlisting}
+(** Fonction principale *)
+let () = 
+
+  (* Construit le div *)
+  let stringdiv = Html.div ~style:"id: string; padding: 5px; 
+    text-align: center; font-weight: bold; color: red;" [] in
+  Js.Node.set_attribute stringdiv "id" "string" ;
+
+  (* Construit le bouton *)
+  let inputstring = string_input "Texte" "" in
+  Js.Node.set_attribute inputstring "id" "text" ;	
+	
+  (* Ajoute les elements a la page *)
+  let body = (get_element_by_id "body") in
+  Node.append body (inputstring);
+  Node.append body (button "Afficher"
+  (fun () ->
+    print ();
+  ));
+  Node.append body (stringdiv);;
+ \end{lstlisting}
+
+\end{tabular}
+\end{center}
 
 \end{document}

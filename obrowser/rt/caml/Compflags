@@ -1,0 +1,27 @@
+#!/bin/sh
+#########################################################################
+#                                                                       #
+#                            Objective Caml                             #
+#                                                                       #
+#            Xavier Leroy, projet Cristal, INRIA Rocquencourt           #
+#                                                                       #
+#   Copyright 2004 Institut National de Recherche en Informatique et    #
+#   en Automatique.  All rights reserved.  This file is distributed     #
+#   under the terms of the GNU Library General Public License, with     #
+#   the special exception on linking described in file ../LICENSE.      #
+#                                                                       #
+#########################################################################
+
+# $Id: Compflags,v 1.5 2004/11/25 00:04:15 doligez Exp $
+
+case $1 in
+  pervasives.cm[io]) echo ' -nopervasives';;
+  camlinternalOO.cmi) echo ' -nopervasives';;
+  jsOO.cmi) echo ' -nopervasives';;
+  jsOO_basic_io.cm[io]) echo ' -nopervasives';;
+  arrayLabels.cm[o]) echo ' -nolabels';;
+  listLabels.cm[o]) echo ' -nolabels';;
+  stringLabels.cm[o]) echo ' -nolabels';;
+  moreLabels.cm[o]) echo ' -nolabels';;
+  *) echo ' ';;
+esac

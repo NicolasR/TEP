@@ -119,7 +119,7 @@ let width = ref 600;;
 
 (** Construit un champ de type input HTML pour la saisie de texte 
 		@param name, le nom du champ
-		@param valuen la valeur
+		@param value la valeur
 		@return element
 *)
 let string_input name value =
@@ -131,6 +131,7 @@ input;;
 (** Construit un bouton HTML 
 		@param name, nom du bouton
 		@param callback, fonction à appeler
+		@return button
 *)
 let button name callback =
   let input = Js.Node.element "input" in
@@ -155,7 +156,10 @@ let draw_graph tree =
 	fill_rect 0 0 !height !width;
 	draw_tree tree;;
 
-
+(** Affiche l'expression courante
+		@param tree, l'arbre que l'on souhaite afficher
+		@param isEnd, indique si c'est la reduction finale
+*)
 let show_string tree isEnd =
 	let div = (get_element_by_id "string") in
 	Node.empty div;
@@ -223,7 +227,13 @@ let rec firstreduce () =
 	with
 		| _ -> 
 			set_color grey;
-			clear_graph();;
+			if (!isGraph) then
+				clear_graph();
+			let stringdiv = (get_element_by_id "string") in
+			Node.empty stringdiv;
+			Node.append stringdiv (Node.text "Erreur expression!");
+			Node.set_attribute (get_element_by_id "nextbutton") "style" "display: none";
+			Node.set_attribute (get_element_by_id "previousbutton") "style" "display: none";;
 
 (** Fonction principale *)
 let () = 

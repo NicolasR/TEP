@@ -21,7 +21,7 @@ operation.cmo: operation.ml
 	CAMLLIB=$(OBROWSER)/rt/caml ocamlc -c operation.ml
 
 #Génère la doc
-doc: operation.ml parsingstr.ml evaluation.ml
+doc: all
 	mkdir doc
 	ocamldoc -I $(OBROWSER)/rt/caml js.ml operation.ml parsingstr.ml evaluation.ml -html -o Projet -d doc
 
@@ -37,4 +37,9 @@ cleandoc:
 mrproper: clean
 	rm -rf evaluation.exe.uue
 
-
+#Construit l'archive
+build:
+	mkdir Duperron_Rignault_LambdaCalc
+	cp -r doc evaluation.ml Makefile operation.ml parsingstr.ml rapport.pdf test.html vm.js obrowser Duperron_Rignault_LambdaCalc
+	tar cfvz Duperron_Rignault_LambdaCalc.tar.gz Duperron_Rignault_LambdaCalc
+	rm -r Duperron_Rignault_LambdaCalc
