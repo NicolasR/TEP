@@ -57,7 +57,7 @@
 %%\makeatother
 
 \title{Rapport de Projet TEP\\Une applet d'évaluation des lambda-termes utilisant O'Browser}
-\author{Nicolas RIGNAULT \and Thibault DUPERRON}
+\author{Thibault DUPERRON \and Nicolas RIGNAULT}
 
 
 
@@ -70,40 +70,57 @@
 \newpage
 \section{Introduction}
 
+\subsection{Projet}
 
-\subsection{Présentation du lambda Calcul}
+L'objectif est de réaliser un évaluateur de lambda-termes en utilisation OBrowser. Il s'agit donc d'implémenter les fonctions d'alpha-conversion et de béta-réduction en Ocaml et d'afficher le tout dans un navigateur Internet en utilisant OBrowser.
 
-TODO
+2 projets ont déjà été réalisés en PHP\footnote{http://stoufete.free.fr/TEP/page\_accueil.php} et en Java\footnote{http://www-apr.lip6.fr/~chaillou/Public/enseignement/2010-2011/tep/public/PROGS/AppletLG.html}.\\
 
-\subsection{Présentation d'Obrowser}
+Le but est donc d'implémenter le même comportement en utilisant OBrowser.
+
+
+\subsection{OBrowser}
 
 \subsubsection{Présentation}
-Obrowser\footnote{http://www.pps.jussieu.fr/~canou/obrowser/tutorial/} est une machine virtuelle Ocaml (???? a verif) pour navigateur internet développée par Benjamin Canou, Emmanuel Chailloux,???. Elle est basée sur la librairie ocaml à laquelle a été ajouté une couche de javascript permettant l'execution de code ocaml dans un navigateur. La syntaxe est donc très proche de celle du langage Javascript.
+OBrowser\footnote{http://www.pps.jussieu.fr/~canou/obrowser/tutorial/} est un interpreteur de bytecode Ocaml écrit en Javascript par Benjamin Canou. Le but est de pouvoir exécuter du code Ocaml dans un navigateur internet. Des fonctions permettant de manipuler des balises html ont donc été ajoutées afin d'être 
+utilisées dans les programmes Ocaml.
 
 \subsubsection{Tutoriel}
-L'utilisation de Obrowser étant basée sur Javascript, il faut donc avoir quelques notions de ce langage ainsi que de Html. Dans cette exemple, on souhaite créer un champ de saisie de texte et un bouton. Un clique sur le bouton entrainerait l'affichage du contenu d
+Voici un exemple d'utilisation de OBrowser:\\
 
-\newpage
+On souhaite créer un champ de saisie de texte et un bouton. Un clique sur le bouton entrainerait l'affichage du contenu du champ de saisie de texte. On a donc besoin d'un bouton, d'un champ de saisie de texte et eventuellement d'un emplacement où ecrire le texte (par exemple une balise div).
 
-\section{Présentation des applet d'évaluation déjà existante}
-
-\subsection{PHP}
-
-TODO
-
-\subsection{JAVA}
-
-TODO
+\subsection{Lambda-calcul}
 
 \newpage
 \section{Travail effecué}
 
-\subsection{Parsing de chaîne de caractère}
+\subsection{Parsing de chaîne de caractères}
 
 \subsubsection{Objectif}
-Le but de cette fonction est d'obtenir un arbre correspondant à la chaîne donnée. Ainsi, d'après les types définies précédemment (voir xx), on souhaite donc obtenir un arbre. Ce dernier pourrait ainsi être facilement analysé pour pour pouvoir appliquer les fonctions nécessaires.
+Le but de cette fonction est d'obtenir un arbre correspondant à la chaîne donnée.\\
+
+Un type ``Term'' a été défini pour représenter les arbres pour le Lambda-calcul.
+\begin{figure}[H]
+\begin{center}
+\begin{tabular}{c}
+
+ \begin{lstlisting}
+type term =
+| Var of string
+| Lambda of string * term
+| App of term * term
+ \end{lstlisting}
+
+\end{tabular}
+\end{center}
+\caption{Type Term pour représenter les arbres pour le Lambda-calcul}
+ \label{tree1}
+\end{figure}
+Ainsi, d'après ce type ``Term'' on souhaite donc obtenir un arbre. Ce dernier pourrait ainsi être facilement analysé pour pour pouvoir appliquer les fonctions nécessaires.
 \\
 \\\underline{Exemple:} L'expression (lx.xx)(lxy.xy) doit renvoyer l'arbre suivant
+
 \begin{figure}[H]
 \centering
   \psset{levelsep=1cm,nodesep=1mm}
@@ -152,7 +169,6 @@ Les différentes variables sont stockées dans des environnements avec leur attr
  \label{tree2}
 \end{figure}
 
-\newpage
 Ici on commence donc par analyser la première expression : (lx.x(yz))\\
 On stocke ``lx'' et ``x'' dans l'environnement et on analyse ensuite l'expression suivante ``yz''. Enfin on les fusionne.\\
 
@@ -182,34 +198,34 @@ On analyse ensuite l'expression suivante, (ly.y), on effectue le même traitemen
  \label{tree3}
 \end{figure}
 
-
-\subsection{Operations sur l'arbre}
+\subsection{Implémentation Lambda-calcul}
 
 \subsubsection{Choix du lambda à evaluer}
 
 Le premier lambda à evaluer est celui qui est le plus à gauche dans l'arbre et dont le père est une Application.
-listeNouveauNoms
-Pour trouver ce sous arbre et sa position dans l'arbre d'origine, la fonction `rechercheLambda` fait un parcours recurcif de l'arbre.
-Pour chaque application, la fonction va regarder si un tel lambda existe dans le sous arbre gauche, si c'est le cas il renvoi le chemin vers ce lambda,
+
+Pour trouver ce sous arbre et sa position dans l'arbre d'origine, la fonction `rechercheLambda` fait un parcours recursif de l'arbre.
+Pour chaque application, la fonction va regarder si un tel lambda existe dans le sous arbre gauche, si c'est le cas il renvoie le chemin vers ce lambda,
  sinon il regardera dans le sous arbre droit. Si aucun lambda n'est trouvé alors le chemin renvoyé est une liste vide.
 
-\subsubsection{Alpha Convertion}
+\subsubsection{Alpha Conversion}
 
-Les fonctions pour l'alpha conversion vont permettrent de modifier le nom des variables liés dans le sous arbre trouvé par 
-l'etape du choix du lambda à evaluer sans modifier le sens de l'expression.
 
-L'alpha conversion est fait en 3 étapes:
+Les fonctions pour l'alpha conversion vont permettrent de modifier le nom des variables liées. En effet, dans le sous arbre trouvé par 
+l'etape du choix du lambda à evaluer, on souhaite pouvoir renommer les variables liées sans modifier le sens de l'expression.\\
+
+L'alpha conversion est faite en 3 étapes:
 \begin{itemize}
- \item La fonction listLambda permet de lister tout les lambdas communs entre le sous arbre gauche et le sous arbre droit
- \item La fonction listeNouveauNoms permet de donner pour chaque lambda de créer des couples (nom, nouveauNom) tel que le nouveau
+ \item La fonction \textbf{listLambda} permet de lister tout les lambdas communs entre le sous arbre gauche et le sous arbre droit
+ \item La fonction \textbf{listeNouveauNoms} permet, pour chaque lambda, de créer des couples (nom, nouveauNom) tel que le nouveau
 nom de variable ne soit pas lié.
- \item La fonction recreeArbreAlphaConv permet de recréer un arbre en appliquant les modifications de noms de variables
+ \item La fonction \textbf{recreeArbreAlphaConv} permet de recréer un arbre en appliquant les modifications de noms de variables
 \end{itemize}
 
 
 \subsubsection{Beta Réduction}
 
-  La fonction recreeArbreBetaRed permet grace aux informations données par l'etape du choix du lambda à evaluer d'effectuer la
+  La fonction \textbf{recreeArbreBetaRed} permet grace aux informations données par l'étape du choix du lambda à evaluer d'effectuer la
 beta réduction sur l'arbre.
 
   Pour cela, la fonction va laisser en l'état toutes les parties de l'arbre non concernées par la beta réduction, et va modifier
@@ -217,6 +233,38 @@ le sous arbre identifié précédement en remplacant chaque occurrence de la var
 droit.
 
 
+\subsection{Utilisation OBrowser}
 
+  Nous avons choisis d'utiliser la librairie ``Graphics'' d'Ocaml car nous voulions afficher directement nos arbres dans le navigateur, ce qui est possible. Nous avons donc créé une page Html qui exécute le code Ocaml à l'ouverture via un script Javascript. Nous avons ensuite ajouté les éléments dont nous avions besoin, à savoir:
+\begin{itemize}
+ \item Un champ de saisie de texte pour récupérer l'expression de lambda-termes.
+ \item Un bouton pour valider le texte et afficher la première etapes.
+ \item Le graphe comportant notre arbre.
+ \item Un bouton pour passer à la réduction suivante.
+ \item Un bouton pour passer à l'étape précédente.
+ \item Un texte affichant l'expression courante en fonction de l'arbre.
+ \item Les différents exemples de bases\\
+\end{itemize}
+
+  Le code correspondant se trouve dans le fichier \textbf{evaluation.ml} et utilise les fonctions de parsing et d'operations sur les arbres.
+
+
+\subsection{Manuel d'utilisation}
+
+  Contenu de l'archive:
+\begin{itemize}
+ \item Code de l'évaluateur de Lambda-termes  -> \textbf{evaluation.ml}
+ \item Code de la méthode d'analyse de chaîne -> \textbf{parsingstr.ml}
+ \item Code des méthodes d'alpha-conversion et béta-réduction -> \textbf{operation.ml}
+ \item Une page html exécutant le code compilé -> \textbf{test.html}
+ \item Un répertoire contenant la documentation générées par Ocamldoc -> \textbf{doc}
+ \item Un répertoire contenant les sources de OBrowser -> \textbf{obrowser}
+ \item La machine virtuelle qui interprête le code OCaml -> \textbf{vm.js}
+ \item Le présent rapport -> \textbf{rapport.pdf}\\
+\end{itemize}
+
+  Pour compiler le projet, il faut commencer par compiler les sources de obrowser en se rendant dans son répertoire (un Makefile est présent). Il reste ensuite à compiler les sources du projet (ici aussi un Makefile existe).\\
+
+  Pour que le programme soit exécuté avec la page Html, il faut que la machine virtuelle soit présente. C'est déjà le cas dans notre archive mais elle peut être recompilée avec les sources obrowser.
 
 \end{document}
