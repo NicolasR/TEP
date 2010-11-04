@@ -104,16 +104,26 @@ Pour chaque application, la fonction va regarder si un tel lambda existe dans le
 
 \subsubsection{Alpha Convertion}
 
+Les fonctions pour l'alpha conversion vont permettrent de modifier le nom des variables liés dans le sous arbre trouvé par 
+l'etape du choix du lambda à evaluer sans modifier le sens de l'expression.
+
 L'alpha conversion est fait en 3 étapes:
 \begin{itemize}
  \item La fonction listLambda permet de lister tout les lambdas communs entre le sous arbre gauche et le sous arbre droit
  \item La fonction listeNouveauNoms permet de donner pour chaque lambda de créer des couples (nom, nouveauNom) tel que le nouveau
 nom de variable ne soit pas lié.
- \item La fonction recreeArbreAlphaConv permet de recréer 
+ \item La fonction recreeArbreAlphaConv permet de recréer un arbre en appliquant les modifications de noms de variables
 \end{itemize}
 
 
 \subsubsection{Beta Réduction}
+
+  La fonction recreeArbreBetaRed permet grace aux informations données par l'etape du choix du lambda à evaluer d'effectuer la
+beta réduction sur l'arbre.
+
+Pour cela, la fonction va laisser en l'état toutes les parties de l'arbre non concernées par la beta réduction, et va modifier
+le sous arbre identifié précédement en remplacant chaque occurrence de la variable du lambda à réduire par le sous arbre
+droit.
 
 Pour r�aliser cette fonctionnalit�, nous nous sommes appuy�s sur les classes d�velopp�es pour l'utilisation du prototype d'indexeur. La mise en oeuvre de cette fonction repose donc sur les quatres classes et interfaces suivantes : 
 \begin{itemize}
