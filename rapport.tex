@@ -232,4 +232,39 @@ beta réduction sur l'arbre.
 le sous arbre identifié précédement en remplacant chaque occurrence de la variable du lambda à réduire par le sous arbre
 droit.
 
+
+\subsection{Utilisation OBrowser}
+
+  Nous avons choisis d'utiliser la librairie ``Graphics'' d'Ocaml car nous voulions afficher directement nos arbres dans le navigateur, ce qui est possible. Nous avons donc créé une page Html qui exécute le code Ocaml à l'ouverture via un script Javascript. Nous avons ensuite ajouté les éléments dont nous avions besoin, à savoir:
+\begin{itemize}
+ \item Un champ de saisie de texte pour récupérer l'expression de lambda-termes.
+ \item Un bouton pour valider le texte et afficher la première etapes.
+ \item Le graphe comportant notre arbre.
+ \item Un bouton pour passer à la réduction suivante.
+ \item Un bouton pour passer à l'étape précédente.
+ \item Un texte affichant l'expression courante en fonction de l'arbre.
+ \item Les différents exemples de bases\\
+\end{itemize}
+
+  Le code correspondant se trouve dans le fichier \textbf{evaluation.ml} et utilise les fonctions de parsing et d'operations sur les arbres.
+
+
+\subsection{Manuel d'utilisation}
+
+  Contenu de l'archive:
+\begin{itemize}
+ \item Code de l'évaluateur de Lambda-termes  -> \textbf{evaluation.ml}
+ \item Code de la méthode d'analyse de chaîne -> \textbf{parsingstr.ml}
+ \item Code des méthodes d'alpha-conversion et béta-réduction -> \textbf{operation.ml}
+ \item Une page html exécutant le code compilé -> \textbf{test.html}
+ \item Un répertoire contenant la documentation générées par Ocamldoc -> \textbf{doc}
+ \item Un répertoire contenant les sources de OBrowser -> \textbf{obrowser}
+ \item La machine virtuelle qui interprête le code OCaml -> \textbf{vm.js}
+ \item Le présent rapport -> \textbf{rapport.pdf}\\
+\end{itemize}
+
+  Pour compiler le projet, il faut commencer par compiler les sources de obrowser en se rendant dans son répertoire (un Makefile est présent). Il reste ensuite à compiler les sources du projet (ici aussi un Makefile existe).\\
+
+  Pour que le programme soit exécuté avec la page Html, il faut que la machine virtuelle soit présente. C'est déjà le cas dans notre archive mais elle peut être recompilée avec les sources obrowser.
+
 \end{document}
