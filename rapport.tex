@@ -56,8 +56,10 @@
 %%\def\toclevel@subparagraph{6}
 %%\makeatother
 
-\title{Rapport de Projet TEP\\Evaluateur Lambda-termes}
+\title{Rapport de Projet TEP\\Une applet d'évaluation des lambda-termes utilisant O'Browser}
 \author{Thibault DUPERRON \and Nicolas RIGNAULT}
+
+
 
 \begin{document}
 \renewcommand{\bibname}{}
@@ -68,13 +70,57 @@
 \newpage
 \section{Introduction}
 
-\subsection{Parsing de chaîne de caractère}
+\subsection{Projet}
 
+L'objectif est de réaliser un évaluateur de lambda-termes en utilisation OBrowser. Il s'agit donc d'implémenter les fonctions d'alpha-conversion et de béta-réduction en Ocaml et d'afficher le tout dans un navigateur Internet en utilisant OBrowser.
+
+2 projets ont déjà été réalisés en PHP\footnote{http://stoufete.free.fr/TEP/page\_accueil.php} et en Java\footnote{http://www-apr.lip6.fr/~chaillou/Public/enseignement/2010-2011/tep/public/PROGS/AppletLG.html}.\\
+
+Le but est donc d'implémenter le même comportement en utilisant OBrowser.
+
+
+\subsection{OBrowser}
+
+\subsubsection{Présentation}
+OBrowser\footnote{http://www.pps.jussieu.fr/~canou/obrowser/tutorial/} est un interpreteur de bytecode Ocaml écrit en Javascript par Benjamin Canou. Le but est de pouvoir exécuter du code Ocaml dans un navigateur internet. Des fonctions permettant de manipuler des balises html ont donc été ajoutées afin d'être 
+utilisées dans les programmes Ocaml.
+
+\subsubsection{Tutoriel}
+Voici un exemple d'utilisation de OBrowser:\\
+
+On souhaite créer un champ de saisie de texte et un bouton. Un clique sur le bouton entrainerait l'affichage du contenu du champ de saisie de texte. On a donc besoin d'un bouton, d'un champ de saisie de texte et eventuellement d'un emplacement où ecrire le texte (par exemple une balise div).
+
+\subsection{Lambda-calcul}
+
+\newpage
+\section{Travail effecué}
+
+\subsection{Parsing de chaîne de caractères}
 
 \subsubsection{Objectif}
-Le but de cette fonction est d'obtenir un arbre correspondant à la chaîne donnée. Ainsi, d'après les types définies précédemment (voir xx), on souhaite donc obtenir un arbre. Ce dernier pourrait ainsi être facilement analysé pour pour pouvoir appliquer les fonctions nécessaires.
+Le but de cette fonction est d'obtenir un arbre correspondant à la chaîne donnée.\\
+
+Un type ``Term'' a été défini pour représenter les arbres pour le Lambda-calcul.
+\begin{figure}[H]
+\begin{center}
+\begin{tabular}{c}
+
+ \begin{lstlisting}
+type term =
+| Var of string
+| Lambda of string * term
+| App of term * term
+ \end{lstlisting}
+
+\end{tabular}
+\end{center}
+\caption{Type Term pour représenter les arbres pour le Lambda-calcul}
+ \label{tree1}
+\end{figure}
+Ainsi, d'après ce type ``Term'' on souhaite donc obtenir un arbre. Ce dernier pourrait ainsi être facilement analysé pour pour pouvoir appliquer les fonctions nécessaires.
 \\
 \\\underline{Exemple:} L'expression (lx.xx)(lxy.xy) doit renvoyer l'arbre suivant
+
 \begin{figure}[H]
 \centering
   \psset{levelsep=1cm,nodesep=1mm}
@@ -123,7 +169,6 @@ Les différentes variables sont stockées dans des environnements avec leur attr
  \label{tree2}
 \end{figure}
 
-\newpage
 Ici on commence donc par analyser la première expression : (lx.x(yz))\\
 On stocke ``lx'' et ``x'' dans l'environnement et on analyse ensuite l'expression suivante ``yz''. Enfin on les fusionne.\\
 
@@ -153,17 +198,38 @@ On analyse ensuite l'expression suivante, (ly.y), on effectue le même traitemen
  \label{tree3}
 \end{figure}
 
-\subsection{Obrowser}
+\subsection{Implémentation Lambda-calcul}
 
-\subsubsection{Présentation}
-Obrowser est un interpreteur de bytecode Ocaml écrit en Javascript par Benjamin Canou. Le but est de pouvoir executer du code Ocaml dans un navigateur internet. Des fonctions permettant de manipuler des balises html ont donc été ajoutées afin d'être 
-utilisées dans les programmes Ocaml.
+\subsubsection{Choix du lambda à evaluer}
 
-\subsubsection{Utilisation}
-Voici un exemple d'utilisation de Obrowser:\\
+Le premier lambda à evaluer est celui qui est le plus à gauche dans l'arbre et dont le père est une Application.
 
-On souhaite créer un champ de saisie de texte et un bouton. Un clique sur le bouton entrainerait l'affichage du contenu du champ de saisie de texte.
+Pour trouver ce sous arbre et sa position dans l'arbre d'origine, la fonction `rechercheLambda` fait un parcours recursif de l'arbre.
+Pour chaque application, la fonction va regarder si un tel lambda existe dans le sous arbre gauche, si c'est le cas il renvoie le chemin vers ce lambda,
+ sinon il regardera dans le sous arbre droit. Si aucun lambda n'est trouvé alors le chemin renvoyé est une liste vide.
 
-\subsubsection{Projet}
-Le but est donc d'utiliser Obrowser pour la réalisation de l'évaluateur de lambda-termes. 
+\subsubsection{Alpha Conversion}
+
+
+Les fonctions pour l'alpha conversion vont permettrent de modifier le nom des variables liées. En effet, dans le sous arbre trouvé par 
+l'etape du choix du lambda à evaluer, on souhaite pouvoir renommer les variables liées sans modifier le sens de l'expression.\\
+
+L'alpha conversion est faite en 3 étapes:
+\begin{itemize}
+ \item La fonction \textbf{listLambda} permet de lister tout les lambdas communs entre le sous arbre gauche et le sous arbre droit
+ \item La fonction \textbf{listeNouveauNoms} permet, pour chaque lambda, de créer des couples (nom, nouveauNom) tel que le nouveau
+nom de variable ne soit pas lié.
+ \item La fonction \textbf{recreeArbreAlphaConv} permet de recréer un arbre en appliquant les modifications de noms de variables
+\end{itemize}
+
+
+\subsubsection{Beta Réduction}
+
+  La fonction \textbf{recreeArbreBetaRed} permet grace aux informations données par l'étape du choix du lambda à evaluer d'effectuer la
+beta réduction sur l'arbre.
+
+  Pour cela, la fonction va laisser en l'état toutes les parties de l'arbre non concernées par la beta réduction, et va modifier
+le sous arbre identifié précédement en remplacant chaque occurrence de la variable du lambda à réduire par le sous arbre
+droit.
+
 \end{document}
