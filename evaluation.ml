@@ -163,9 +163,9 @@ let draw_graph tree =
 let show_string tree isEnd =
 	let div = (get_element_by_id "string") in
 	Node.empty div;
-	let text = ref ("Expression en cours: "^(string_of_tree tree true true)) in
+	let text = ref ("Expression en cours: "^(string_of_tree tree false true)) in
 	if (isEnd) then
-		text := "Reduction finale: "^(string_of_tree tree true true);
+		text := "Reduction finale: "^(string_of_tree tree false true);
 	Node.append div (Node.text !text);;
 
 (** Affiche l'étape precedente de la reduction *)

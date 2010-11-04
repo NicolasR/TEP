@@ -89,6 +89,7 @@ let rec print_tree tree isLambda isFirstLambda =
     @param isLambda: indique si la variable en cours est un lambda
 		@param isFirstLambda: indique si c'est le premier lambda que l'on rencontre
 *)
+(*
 let rec string_of_tree tree isLambda isFirstLambda =
 	match tree with
 		| Var(x) ->
@@ -123,7 +124,35 @@ let rec string_of_tree tree isLambda isFirstLambda =
 				end;
 				!s;
 			end
-;;
+;; *)
+
+let rec string_of_tree arbre isLambda isFirstLambda =
+	match arbre with
+		| Var(x) ->
+			let s = ref "" in
+				if(isLambda) then
+					s:="."^x
+				else
+					s:=x;
+			!s;
+		| App(x,y) -> 
+			let s = ref "" in
+			if(isLambda) then
+					s:=".";
+			s:= !s^"(";
+			s:= !s^string_of_tree x false isFirstLambda;
+			s:= !s^string_of_tree y false isFirstLambda;
+			s:= !s^")";
+			!s;
+		| Lambda(x,y) -> 
+			let s = ref "" in
+			if(not isLambda) then
+				s:= !s^"(l";
+			s:= !s^x;
+			s:= !s^string_of_tree y true isFirstLambda;
+			if(not isLambda) then
+				s:= !s^")";
+			!s;;
 
 (** Construit un arbre en fonction des variables de l'environnement.
 		@param level: niveau actuel *)
@@ -194,6 +223,8 @@ let rec show_tree tree =
 		@return entier
 *)
 let rec search_par first second string level current length =
+	(*print_char (string.[current]);*)
+	(*print_int level;*)
 	if (current = length) then
 		-1
 	else
@@ -407,17 +438,25 @@ let rec parse_string s index isLambda length needtobuild =
 						parse_string s (index+2) true length false;
 						
 				| '.' ->
-						if (s.[index+1] == '(') then
-						begin
-							let nextparClose = search_par ')' '(' s 0 (index+1) length in
-							let temp1 = String.sub s (index+(nextparClose-1)) ((length)-(index+nextparClose-1)) in
-							let temp1length = String.length temp1 in
-							let rightClosePar = String.sub temp1 1 (temp1length-1) in
-							let leftClosePar = String.sub s 2 (length - (String.length rightClosePar)-3) in
-							parse_string ("."^leftClosePar^rightClosePar) (index) false (length-2) true
-						end
+					if (s.[index+1] = '(') then
+								begin
+									(*
+									print_int (search_par ')' '(' s 0 (index + 1) length);
+									print_endline ("\n"^s);*)
+									(*print_endline ("AVANT : " ^ s);
+									print_endline " ";*)
+									let nextparClose = search_par ')' '(' s (-1) (index + 1) length in
+									print_endline " ";
+									let temp1 = String.sub s (index+(nextparClose)) ((length)-(index+nextparClose)) in
+									let temp1length = String.length temp1 in
+									let rightClosePar = String.sub temp1 1 (temp1length-1) in
+									let leftClosePar = String.sub s 2 (length - (String.length rightClosePar)-3) in
+									(*print_endline ("APRES : " ^ "."^leftClosePar^rightClosePar);*)
+									parse_string ("."^leftClosePar^rightClosePar) (index) false (length-2) true
+								end
 					else
-						parse_string s (index+1) false length true ;
+							parse_string s (index+1) false length true ;
+
 				| c ->
 					let char = String.make 1 c in	
 					globalenv := List.append !globalenv ((isLambda,char)::[]);
