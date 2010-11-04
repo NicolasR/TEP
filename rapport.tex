@@ -156,8 +156,14 @@ On analyse ensuite l'expression suivante, (ly.y), on effectue le même traitemen
 \subsection{Obrowser}
 
 \subsubsection{Présentation}
-Obrowser est une machine virtuelle Ocaml (???? a verif) pour navigateur internet développée par Benjamin Canou, Emmanuel Chailloux,???. Elle est basée sur la librairie ocaml à laquelle a été ajouté une couche de javascript permettant l'execution de code ocaml dans un navigateur. La syntaxe est donc très proche de celle du langage Javascript.
+Obrowser est un interpreteur de bytecode Ocaml écrit en Javascript par Benjamin Canou. Le but est de pouvoir executer du code Ocaml dans un navigateur internet. Des fonctions permettant de manipuler des balises html ont donc été ajoutées afin d'être 
+utilisées dans les programmes Ocaml.
 
-\subsubsection{Tutoriel}
-L'utilisation de Obrowser étant basée sur Javascript, il faut donc avoir quelques notions de ce langage ainsi que de Html. Dans cette exemple, on souhaite créer un champ de saisie de texte et un bouton. Un clique sur le bouton entrainerait l'affichage du contenu d
+\subsubsection{Utilisation}
+Voici un exemple d'utilisation de Obrowser:\\
+
+On souhaite créer un champ de saisie de texte et un bouton. Un clique sur le bouton entrainerait l'affichage du contenu du champ de saisie de texte.
+
+\subsubsection{Projet}
+Le but est donc d'utiliser Obrowser pour la réalisation de l'évaluateur de lambda-termes. 
 \end{document}
