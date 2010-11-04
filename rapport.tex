@@ -1,0 +1,163 @@
+\documentclass[a4paper,11pt,titlepage]{article}
+\usepackage[utf8]{inputenc} %support de l'utf8
+\usepackage[T1]{fontenc} %support des accents
+\usepackage[francais]{babel} %support de la langue
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{float} 
+\usepackage{url}
+\geometry{hscale=0.70,vscale=0.70,centering}
+\usepackage{graphicx}
+\usepackage{pstricks}
+\usepackage{pst-tree}
+
+\setcounter{secnumdepth}{4} % Augmente profondeur 
+\setcounter{tocdepth}{4} % Augmente profondeur table des matieres
+\makeatletter
+\renewcommand{\paragraph}{\@startsection{paragraph}{4}{0ex}%
+   {-3.25ex plus -1ex minus -0.2ex}%
+   {1.5ex plus 0.2ex}%
+   {\normalfont\normalsize\bfseries}}
+\makeatother
+
+\makeatletter
+\def\url@biburlstyle{%
+\@ifundefined{selectfont}{\def\UrlFont{\sf}}{\def\UrlFont{\small\ttfamily}}}
+\makeatother
+
+%\makeatletter
+%\newcounter {subsubsubsection}[subsubsection]
+%\renewcommand\thesubsubsubsection{\thesubsubsection .\@alph\c@subsubsubsection}
+%\newcommand\subsubsubsection{\@startsection{subsubsubsection}{4}{\z@}%
+%                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+%                                     {1.5ex \@plus .2ex}%
+%                                     {\normalfont\normalsize\bfseries}}
+%\renewcommand\paragraph{\@startsection{paragraph}{5}{\z@}%
+%                                    {3.25ex \@plus1ex \@minus.2ex}%
+%                                    {-1em}%
+%                                    {\normalfont\normalsize\bfseries}}
+%\renewcommand\subparagraph{\@startsection{subparagraph}{6}{\parindent}%
+%                          
+
+%                                       {-1em}%
+%                                      {\normalfont\normalsize\bfseries}}
+%\newcommand*\l@subsubsubsection{\@dottedtocline{4}{10.0em}{4.1em}}
+%\renewcommand*\l@paragraph{\@dottedtocline{5}{10em}{5em}}
+%\renewcommand*\l@subparagraph{\@dottedtocline{6}{12em}{6em}}
+%\newcommand*{\subsubsubsectionmark}[1]{}
+%\makeatother
+
+%%\usepackage{hyperref}
+
+%%\makeatletter
+%%\def\toclevel@subsubsubsection{4}
+%%\def\toclevel@paragraph{5}
+%%\def\toclevel@subparagraph{6}
+%%\makeatother
+
+\title{Rapport de Projet TEP\\Evaluateur Lambda-termes}
+\author{Thibault DUPERRON \and Nicolas RIGNAULT}
+
+\begin{document}
+\renewcommand{\bibname}{}
+\renewcommand{\refname}{}
+\maketitle
+\tableofcontents
+
+\newpage
+\section{Introduction}
+
+\subsection{Parsing de chaîne de caractère}
+
+
+\subsubsection{Objectif}
+Le but de cette fonction est d'obtenir un arbre correspondant à la chaîne donnée. Ainsi, d'après les types définies précédemment (voir xx), on souhaite donc obtenir un arbre. Ce dernier pourrait ainsi être facilement analysé pour pour pouvoir appliquer les fonctions nécessaires.
+\\
+\\\underline{Exemple:} L'expression (lx.xx)(lxy.xy) doit renvoyer l'arbre suivant
+\begin{figure}[H]
+\centering
+  \psset{levelsep=1cm,nodesep=1mm}
+  {\pstree{\Tr{App}}
+	 {{\pstree{\Tr{Lambda x}}
+		 {\pstree {\Tr{App}}
+			  {
+			   {\Tr{x}}
+			   {\Tr{x}}
+			  }
+		 }
+	 }
+	{\pstree{\Tr{App}}
+		 {\pstree {\Tr{Lambda x}}
+			  {\pstree{\Tr{Lambda y}}
+			   {{\Tr{x}}
+			   {\Tr{y}}}
+			  }
+		 }
+	}}
+  }
+\caption{Arbre correspondant à l'expression (lx.xx)(lxy.xy)}
+ \label{tree1}
+\end{figure}
+
+\subsubsection{Algorithme}
+L'algorithme utilisé est le suivant: la chaîne est analysée, caractère par caractère. Lorsque l'on recontre une parenthèse ouvrante, on cherche la prochaine parenthèse fermante correspondante. Puis, on relance la fonction sur le contenu de cette sous chaîne ainsi que sur le reste de la chaîne de départ. On constitut ainsi un sous arbre pour chaque chaine entre parenthèses. Ces chaines sont ensuites fusionnées dans l'ordre pour pouvoir obtenir l'arbre final.
+Les différentes variables sont stockées dans des environnements avec leur attribut (savoir s'il s'agit d'un lambda par exemple).
+\\
+\\Exemple de décomposition pour la chaîne (lx.x(yz))(ly.y):
+\begin{figure}[H]
+\centering
+  \psset{levelsep=1cm,nodesep=1mm}
+  {\pstree{\Tr{(lx.x(yz))(ly.y)}}
+	 {{\pstree {\Tr{(lx.x(yz))}}
+			  {
+			   {\Tr{(yz)}}
+			   {\Tr{lx.x}}
+			  }
+		 
+	 }
+	{\Tr{(ly.y)}}
+	}
+  }
+\caption{Arbre de décomposition de l'expression (lx.x(yz))(ly.y)}
+ \label{tree2}
+\end{figure}
+
+\newpage
+Ici on commence donc par analyser la première expression : (lx.x(yz))\\
+On stocke ``lx'' et ``x'' dans l'environnement et on analyse ensuite l'expression suivante ``yz''. Enfin on les fusionne.\\
+
+On analyse ensuite l'expression suivante, (ly.y), on effectue le même traitement et on la fusionne avec l'expression précédente pour obtenir l'arbre final.
+\begin{figure}[H]
+\centering
+  \psset{levelsep=1cm,nodesep=1mm}
+  {\pstree{\Tr{App}}
+	 {{\pstree{\Tr{Lambda x}}
+		 {\pstree {\Tr{App}}
+			  {
+			   {\Tr{x}}
+			   {\pstree {\Tr{App}}
+			      {{\Tr{y}}
+			       {\Tr{z}}}
+			   }
+			  }
+		 }
+	 }
+	{\pstree{\Tr{Lambda y}}
+		{\Tr{y}}
+
+
+	}}
+  }
+\caption{Arbre correspondant à l'expression (lx.x(yz))(ly.y)}
+ \label{tree3}
+\end{figure}
+
+\subsection{Obrowser}
+
+\subsubsection{Présentation}
+Obrowser est une machine virtuelle Ocaml (???? a verif) pour navigateur internet développée par Benjamin Canou, Emmanuel Chailloux,???. Elle est basée sur la librairie ocaml à laquelle a été ajouté une couche de javascript permettant l'execution de code ocaml dans un navigateur. La syntaxe est donc très proche de celle du langage Javascript.
+
+\subsubsection{Tutoriel}
+L'utilisation de Obrowser étant basée sur Javascript, il faut donc avoir quelques notions de ce langage ainsi que de Html. Dans cette exemple, on souhaite créer un champ de saisie de texte et un bouton. Un clique sur le bouton entrainerait l'affichage du contenu d
+\end{document}
